@@ -40,7 +40,7 @@ const HomePage: React.FC = () => {
         const data = await manhwaService.getAllManhwa();
         setManhwas(data);
       } catch (error) {
-        console.error('Error fetching manhwas:', error);
+        console.error('Error fetching codex:', error);
       } finally {
         setLoading(false);
       }
@@ -52,14 +52,14 @@ const HomePage: React.FC = () => {
   if (loading) {
     return (
       <HomeContainer>
-        <LoadingText>Loading manhwas...</LoadingText>
+        <LoadingText>Loading...</LoadingText>
       </HomeContainer>
     );
   }
 
   return (
     <HomeContainer>
-      <Title>Featured Manhwa</Title>
+      <Title>Featured</Title>
       <ManhwaGrid>
         {manhwas.map(manhwa => (
           <ManhwaCard key={manhwa.id} manhwa={manhwa} />

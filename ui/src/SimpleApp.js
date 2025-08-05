@@ -248,7 +248,7 @@ function SimpleApp() {
                 ...(activeSection === 'trending' ? styles.navItemActive : {}),
                 ...(isDarkMode ? styles.navItemDark : {})
               }}
-              title="Trending manhwa"
+              title="Trending"
             >
               <svg style={{width: '16px', height: '16px', marginRight: '6px', verticalAlign: 'middle'}} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2"/>
@@ -306,84 +306,86 @@ function SimpleApp() {
             </nav>
           )}
           
-          {/* Desktop Profile Menu */}
+          {/* Desktop Right Controls */}
           {!isMobile && (
-            <div style={styles.profileMenuContainer} className="profile-menu-container">
-              <button
-                onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                style={{...styles.profileButton, ...(isDarkMode ? styles.profileButtonDark : {})}}
-                aria-label="Profile menu"
-                title="Profile menu"
-              >
-                <svg style={{width: '16px', height: '16px'}} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                  <circle cx="12" cy="7" r="4"/>
-                </svg>
-                <svg style={{width: '12px', height: '12px', marginLeft: '4px', transform: isProfileMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease'}} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                  <polyline points="6,9 12,15 18,9"/>
-                </svg>
-              </button>
+            <div style={styles.rightControls}>
+              <div style={styles.profileMenuContainer} className="profile-menu-container">
+                <button
+                  onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                  style={{...styles.profileButton, ...(isDarkMode ? styles.profileButtonDark : {})}}
+                  aria-label="Profile menu"
+                  title="Profile menu"
+                >
+                  <svg style={{width: '16px', height: '16px'}} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                  <svg style={{width: '12px', height: '12px', marginLeft: '4px', transform: isProfileMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease'}} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                    <polyline points="6,9 12,15 18,9"/>
+                  </svg>
+                </button>
+                
+                {isProfileMenuOpen && (
+                  <div style={{...styles.profileDropdown, ...(isDarkMode ? styles.profileDropdownDark : {})}}>
+                    <a 
+                      href="#" 
+                      onClick={() => {setActiveSection('favorites'); setIsProfileMenuOpen(false);}}
+                      style={{...styles.profileMenuItem, ...(isDarkMode ? styles.profileMenuItemDark : {})}}
+                      title="My favorites"
+                    >
+                      <svg style={{width: '16px', height: '16px', marginRight: '8px'}} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                        <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26 12,2"/>
+                      </svg>
+                      Favorites
+                    </a>
+                    <a 
+                      href="#" 
+                      onClick={() => {setActiveSection('settings'); setIsProfileMenuOpen(false);}}
+                      style={{...styles.profileMenuItem, ...(isDarkMode ? styles.profileMenuItemDark : {})}}
+                      title="Settings"
+                    >
+                      <svg style={{width: '16px', height: '16px', marginRight: '8px'}} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M12 1v6m0 6v6m6-12h-6m-6 0h6"/>
+                      </svg>
+                      Settings
+                    </a>
+                    <div style={styles.profileMenuDivider}></div>
+                    <a 
+                      href="#" 
+                      style={{...styles.profileMenuItem, ...(isDarkMode ? styles.profileMenuItemDark : {})}}
+                      title="Sign out"
+                    >
+                      <svg style={{width: '16px', height: '16px', marginRight: '8px'}} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <polyline points="16,17 21,12 16,7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                      </svg>
+                      Sign Out
+                    </a>
+                  </div>
+                )}
+              </div>
               
-              {isProfileMenuOpen && (
-                <div style={{...styles.profileDropdown, ...(isDarkMode ? styles.profileDropdownDark : {})}}>
-                  <a 
-                    href="#" 
-                    onClick={() => {setActiveSection('favorites'); setIsProfileMenuOpen(false);}}
-                    style={{...styles.profileMenuItem, ...(isDarkMode ? styles.profileMenuItemDark : {})}}
-                    title="My favorites"
-                  >
-                    <svg style={{width: '16px', height: '16px', marginRight: '8px'}} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                      <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26 12,2"/>
-                    </svg>
-                    Favorites
-                  </a>
-                  <a 
-                    href="#" 
-                    onClick={() => {setActiveSection('settings'); setIsProfileMenuOpen(false);}}
-                    style={{...styles.profileMenuItem, ...(isDarkMode ? styles.profileMenuItemDark : {})}}
-                    title="Settings"
-                  >
-                    <svg style={{width: '16px', height: '16px', marginRight: '8px'}} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                      <circle cx="12" cy="12" r="3"/>
-                      <path d="M12 1v6m0 6v6m6-12h-6m-6 0h6"/>
-                    </svg>
-                    Settings
-                  </a>
-                  <div style={styles.profileMenuDivider}></div>
-                  <a 
-                    href="#" 
-                    style={{...styles.profileMenuItem, ...(isDarkMode ? styles.profileMenuItemDark : {})}}
-                    title="Sign out"
-                  >
-                    <svg style={{width: '16px', height: '16px', marginRight: '8px'}} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                      <polyline points="16,17 21,12 16,7"/>
-                      <line x1="21" y1="12" x2="9" y2="12"/>
-                    </svg>
-                    Sign Out
-                  </a>
-                </div>
-              )}
+              <button 
+                onClick={toggleTheme}
+                style={{...styles.themeToggle, ...(isDarkMode ? styles.themeToggleDark : {})}}
+                aria-label={`Switch to ${isDarkMode ? 'light' : 'dark'} mode`}
+                title={`Switch to ${isDarkMode ? 'light' : 'dark'} mode`}
+              >
+                {isDarkMode ? (
+                  <svg style={{width: '16px', height: '16px'}} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="5"/>
+                    <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                  </svg>
+                ) : (
+                  <svg style={{width: '16px', height: '16px'}} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                  </svg>
+                )}
+              </button>
             </div>
           )}
-          
-          <button 
-            onClick={toggleTheme}
-            style={{...styles.themeToggle, ...(isDarkMode ? styles.themeToggleDark : {})}}
-            aria-label={`Switch to ${isDarkMode ? 'light' : 'dark'} mode`}
-            title={`Switch to ${isDarkMode ? 'light' : 'dark'} mode`}
-          >
-            {isDarkMode ? (
-              <svg style={{width: '16px', height: '16px'}} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="5"/>
-                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
-              </svg>
-            ) : (
-              <svg style={{width: '16px', height: '16px'}} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-              </svg>
-            )}
-          </button>
         </div>
         
         {/* Search Bar */}
@@ -391,7 +393,7 @@ function SimpleApp() {
           <div style={styles.searchWrapper}>
             <input
               type="text"
-              placeholder="Search manhwa..."
+              placeholder="Search codex..."
               value={searchQuery}
               onChange={handleSearch}
               style={{...styles.searchInput, ...(isDarkMode ? styles.searchInputDark : {})}}
@@ -443,7 +445,7 @@ function SimpleApp() {
               href="#" 
               onClick={() => {setActiveSection('trending'); toggleMenu();}}
               style={{...styles.menuItem, ...(isDarkMode ? styles.menuItemDark : {})}}
-              title="Trending manhwa"
+              title="Trending"
             >
               <svg style={{width: '18px', height: '18px', marginRight: '12px', verticalAlign: 'middle'}} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2"/>
@@ -782,6 +784,9 @@ const styles = {
     justifyContent: 'space-between',
     padding: '12px 16px',
     height: '56px',
+    maxWidth: '1200px',
+    margin: '0 auto',
+    width: '100%',
   },
   
   // Hamburger Menu
@@ -802,7 +807,7 @@ const styles = {
   hamburgerLine: {
     width: '20px',
     height: '2px',
-    background: '#1f2937',
+    background: '#ffffff',
     margin: '2px 0',
     transition: 'all 0.3s ease',
     transformOrigin: 'center',
@@ -824,15 +829,18 @@ const styles = {
   logo: {
     fontSize: '18px',
     fontWeight: '700',
-    margin: 0,
+    marginTop: 0,
+    marginBottom: 0,
+    marginLeft: 0,
+    marginRight: 0,
     flex: 1,
     textAlign: 'center',
     color: '#ffffff',
   },
   logoDesktop: {
     textAlign: 'left',
-    flex: 'none',
-    marginRight: '2rem',
+    flex: '0 0 auto',
+    marginRight: '0',
   },
   logoDark: {
     color: '#f9fafb',
@@ -843,6 +851,10 @@ const styles = {
     display: 'flex',
     gap: '0',
     alignItems: 'center',
+    flex: '1',
+    justifyContent: 'center',
+    marginLeft: '2rem',
+    marginRight: '2rem',
   },
   navItem: {
     padding: '8px 16px',
@@ -868,6 +880,11 @@ const styles = {
   profileMenuContainer: {
     position: 'relative',
     marginRight: '12px',
+  },
+  rightControls: {
+    display: 'flex',
+    alignItems: 'center',
+    flex: '0 0 auto',
   },
   profileButton: {
     background: 'rgba(255, 255, 255, 0.2)',
@@ -901,8 +918,9 @@ const styles = {
   },
   profileDropdownDark: {
     background: 'rgba(15, 23, 42, 0.95)',
+    backdropFilter: 'blur(20px)',
     border: '1px solid rgba(51, 65, 85, 0.8)',
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
   },
   profileMenuItem: {
     display: 'flex',
@@ -945,6 +963,7 @@ const styles = {
     padding: '0 16px 12px 16px',
     display: 'flex',
     justifyContent: 'center',
+    alignItems: 'center',
   },
   searchWrapper: {
     position: 'relative',
@@ -1172,8 +1191,9 @@ const styles = {
   },
   webtoonCardDark: {
     background: 'rgba(55, 65, 81, 0.8)',
+    backdropFilter: 'blur(10px)',
     border: '1px solid rgba(75, 85, 99, 0.4)',
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
   },
   
   // Card Image Container
@@ -1294,8 +1314,9 @@ const styles = {
     marginTop: '40px',
   },
   footerDark: {
-    background: 'rgba(15, 23, 42, 0.8)',
-    borderTop: '1px solid rgba(51, 65, 85, 0.6)',
+    background: 'rgba(15, 23, 42, 0.1)',
+    backdropFilter: 'blur(20px)',
+    borderTop: '1px solid rgba(75, 85, 99, 0.2)',
   },
   footerContent: {
     display: 'grid',
