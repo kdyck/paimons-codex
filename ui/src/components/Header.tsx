@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import ThemeToggle from './ThemeToggle';
 
 const HeaderContainer = styled.header`
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
+  background: ${props => props.theme.colors.glass.background};
+  backdrop-filter: ${props => props.theme.colors.glass.backdrop};
   padding: 1rem 2rem;
   display: flex;
   justify-content: space-between;
@@ -12,11 +13,17 @@ const HeaderContainer = styled.header`
 `;
 
 const Logo = styled.h1`
-  color: white;
+  color: ${props => props.theme.colors.text.primary};
   margin: 0;
   cursor: pointer;
   font-size: 1.8rem;
   font-weight: bold;
+`;
+
+const RightSection = styled.div`
+  display: flex;
+  gap: 1rem;
+  align-items: center;
 `;
 
 const SearchContainer = styled.div`
@@ -29,13 +36,16 @@ const SearchInput = styled.input`
   padding: 0.5rem 1rem;
   border: none;
   border-radius: 25px;
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  placeholder-color: rgba(255, 255, 255, 0.7);
+  background: ${props => props.theme.colors.glass.background};
+  color: ${props => props.theme.colors.text.primary};
+  
+  &::placeholder {
+    color: ${props => props.theme.colors.text.placeholder};
+  }
   
   &:focus {
     outline: none;
-    background: rgba(255, 255, 255, 0.3);
+    background: ${props => props.theme.colors.glass.hover};
   }
 `;
 
@@ -43,18 +53,22 @@ const SearchButton = styled.button`
   padding: 0.5rem 1rem;
   border: none;
   border-radius: 25px;
-  background: rgba(255, 255, 255, 0.3);
-  color: white;
+  background: ${props => props.theme.colors.glass.hover};
+  color: ${props => props.theme.colors.text.primary};
   cursor: pointer;
+  transition: background 0.3s ease;
   
   &:hover {
-    background: rgba(255, 255, 255, 0.4);
+    background: ${props => props.theme.colors.glass.hover};
+    opacity: 0.8;
   }
 `;
 
 const Header: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
+  
+  console.log('Header rendering');
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
@@ -73,18 +87,21 @@ const Header: React.FC = () => {
       <Logo onClick={() => navigate('/')}>
         Paimon's Codex
       </Logo>
-      <SearchContainer>
-        <SearchInput
-          type="text"
-          placeholder="Search manhwa..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          onKeyPress={handleKeyPress}
-        />
-        <SearchButton onClick={handleSearch}>
-          Search
-        </SearchButton>
-      </SearchContainer>
+      <RightSection>
+        <SearchContainer>
+          <SearchInput
+            type="text"
+            placeholder="Search manhwa..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyPress={handleKeyPress}
+          />
+          <SearchButton onClick={handleSearch}>
+            Search
+          </SearchButton>
+        </SearchContainer>
+        <ThemeToggle />
+      </RightSection>
     </HeaderContainer>
   );
 };

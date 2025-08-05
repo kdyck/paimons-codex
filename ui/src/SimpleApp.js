@@ -9,10 +9,29 @@ function SimpleApp() {
   const [user, setUser] = useState(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [currentView, setCurrentView] = useState('home');
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const saved = localStorage.getItem('darkMode');
+    return saved ? JSON.parse(saved) : false;
+  });
 
   useEffect(() => {
-    fetch('/api/v1/manhwa/')
-      .then(response => response.json())
+    localStorage.setItem('darkMode', JSON.stringify(isDarkMode));
+  }, [isDarkMode]);
+
+  const toggleTheme = () => {
+    setIsDarkMode(!isDarkMode);
+  };
+
+  useEffect(() => {
+    // Use the API service directly since nginx proxy has port issues
+    const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+    fetch(`${apiUrl}/api/v1/manhwa/`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
       .then(data => {
         setManhwa(data);
         setFilteredManhwa(data);
@@ -56,13 +75,23 @@ function SimpleApp() {
   }
 
   return (
-    <div style={styles.container}>
+    <div style={{...styles.container, ...(isDarkMode ? styles.containerDark : {})}}>
       <Navigation
         onSearch={handleSearch}
         user={user}
         onLogin={() => setShowLoginModal(true)}
         onLogout={handleLogout}
       />
+      
+      <button 
+        onClick={toggleTheme}
+        style={{...styles.themeToggle, ...(isDarkMode ? styles.themeToggleDark : {})}}
+        title={`Switch to ${isDarkMode ? 'light' : 'dark'} mode`}
+      >
+        <div style={{...styles.toggleSlider, ...(isDarkMode ? styles.toggleSliderDark : {})}}>
+          {isDarkMode ? '🌙' : '☀️'}
+        </div>
+      </button>
 
       <LoginModal
         isOpen={showLoginModal}
@@ -416,6 +445,49 @@ const styles = {
     fontWeight: '500',
     borderBottom: '1px solid transparent',
     transition: 'border-color 0.3s ease',
+  },
+  // Theme Toggle Styles
+  themeToggle: {
+    position: 'fixed',
+    top: '20px',
+    right: '20px',
+    background: 'rgba(255, 255, 255, 0.2)',
+    border: '2px solid rgba(255, 255, 255, 0.3)',
+    borderRadius: '50px',
+    padding: '8px',
+    width: '70px',
+    height: '36px',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    display: 'flex',
+    alignItems: 'center',
+    zIndex: 1000,
+    backdropFilter: 'blur(10px)',
+  },
+  themeToggleDark: {
+    background: 'rgba(15, 23, 42, 0.8)',
+    border: '2px solid rgba(241, 245, 249, 0.3)',
+  },
+  toggleSlider: {
+    background: '#fbbf24',
+    width: '26px',
+    height: '26px',
+    borderRadius: '50%',
+    transition: 'all 0.3s ease',
+    transform: 'translateX(0px)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '14px',
+    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+  },
+  toggleSliderDark: {
+    background: '#f1f5f9',
+    transform: 'translateX(32px)',
+  },
+  // Dark Theme Styles
+  containerDark: {
+    background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
   },
 };
 

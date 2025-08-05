@@ -11,7 +11,7 @@ const HomeContainer = styled.div`
 `;
 
 const Title = styled.h2`
-  color: white;
+  color: ${props => props.theme.colors.text.primary};
   text-align: center;
   margin-bottom: 2rem;
   font-size: 2.5rem;
@@ -25,7 +25,7 @@ const ManhwaGrid = styled.div`
 `;
 
 const LoadingText = styled.p`
-  color: white;
+  color: ${props => props.theme.colors.text.primary};
   text-align: center;
   font-size: 1.2rem;
 `;

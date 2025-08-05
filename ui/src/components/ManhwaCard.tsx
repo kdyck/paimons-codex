@@ -4,16 +4,17 @@ import styled from 'styled-components';
 import { Manhwa } from '../types/manhwa';
 
 const Card = styled.div`
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
+  background: ${props => props.theme.colors.glass.background};
+  backdrop-filter: ${props => props.theme.colors.glass.backdrop};
   border-radius: 15px;
   padding: 1.5rem;
   cursor: pointer;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
   
   &:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 10px 30px ${props => props.theme.colors.shadow};
+    background: ${props => props.theme.colors.glass.hover};
   }
 `;
 
@@ -26,13 +27,13 @@ const CoverImage = styled.img`
 `;
 
 const Title = styled.h3`
-  color: white;
+  color: ${props => props.theme.colors.text.primary};
   margin: 0 0 0.5rem 0;
   font-size: 1.3rem;
 `;
 
 const Author = styled.p`
-  color: rgba(255, 255, 255, 0.8);
+  color: ${props => props.theme.colors.text.secondary};
   margin: 0 0 0.5rem 0;
   font-style: italic;
 `;
@@ -45,15 +46,15 @@ const GenreList = styled.div`
 `;
 
 const GenreTag = styled.span`
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
+  background: ${props => props.theme.colors.glass.hover};
+  color: ${props => props.theme.colors.text.primary};
   padding: 0.2rem 0.5rem;
   border-radius: 15px;
   font-size: 0.8rem;
 `;
 
 const Description = styled.p`
-  color: rgba(255, 255, 255, 0.9);
+  color: ${props => props.theme.colors.text.secondary};
   font-size: 0.9rem;
   line-height: 1.4;
   margin: 0;
