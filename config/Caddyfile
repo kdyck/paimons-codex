@@ -1,0 +1,56 @@
+# Caddyfile for Paimon's Codex
+
+# Main domain configuration
+paimonscodex.com {
+    # Handle API routes
+    handle_path /api/* {
+        reverse_proxy api:8000
+    }
+    
+    # Handle root and all other routes to React app
+    handle {
+        reverse_proxy ui:3000
+    }
+    
+    # Enable compression
+    encode gzip
+    
+    # Add security headers
+    header {
+        # Remove server info
+        -Server
+        
+        # Security headers
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy strict-origin-when-cross-origin
+        
+        # HSTS
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    }
+    
+    # Logging
+    log {
+        output file /var/log/caddy/paimonscodex.log
+        format json
+    }
+}
+
+# Development configuration for localhost
+localhost {
+    handle_path /api/* {
+        reverse_proxy api:8000
+    }
+    
+    handle {
+        reverse_proxy ui:3000
+    }
+    
+    encode gzip
+}
+
+# Health check endpoint
+:8080 {
+    respond /health "OK" 200
+}

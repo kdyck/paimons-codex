@@ -1,0 +1,28 @@
+# Podman-specific overrides
+# This file provides Podman-specific configurations
+
+version: '3.8'
+
+services:
+  # Oracle Database with Podman-specific settings
+  oracle-db:
+    # Use --privileged for Oracle to work properly with Podman
+    privileged: true
+    # Additional Podman security options
+    security_opt:
+      - label=disable
+    
+  # API service with Podman networking
+  api:
+    # Ensure proper networking with Podman
+    network_mode: bridge
+    
+  # UI service with Podman networking  
+  ui:
+    network_mode: bridge
+    
+  # Caddy with proper Podman permissions
+  caddy:
+    # Podman needs this for port binding
+    security_opt:
+      - label=disable
