@@ -1,18 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import Navigation from './components/Navigation';
-import LoginModal from './components/LoginModal';
 
 function SimpleApp() {
   const [manhwa, setManhwa] = useState([]);
   const [filteredManhwa, setFilteredManhwa] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [currentView, setCurrentView] = useState('home');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState('trending');
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const saved = localStorage.getItem('darkMode');
-    return saved ? JSON.parse(saved) : false;
+    return saved ? JSON.parse(saved) : true; // Default to dark mode
   });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('darkMode', JSON.stringify(isDarkMode));
@@ -20,6 +27,10 @@ function SimpleApp() {
 
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
+  };
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
   };
 
   useEffect(() => {
@@ -43,7 +54,15 @@ function SimpleApp() {
       });
   }, []);
 
-  const handleSearch = (searchTerm) => {
+  const handleSearch = (e) => {
+    const searchTerm = e.target.value;
+    setSearchQuery(searchTerm);
+    
+    if (!searchTerm.trim()) {
+      setFilteredManhwa(manhwa);
+      return;
+    }
+    
     const filtered = manhwa.filter(item =>
       item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -53,22 +72,40 @@ function SimpleApp() {
     setFilteredManhwa(filtered);
   };
 
-  const handleLogin = (userData) => {
-    setUser(userData);
-    setShowLoginModal(false);
+  const clearSearch = () => {
+    setSearchQuery('');
+    setFilteredManhwa(manhwa);
   };
 
-  const handleLogout = () => {
-    setUser(null);
+  const getSectionTitle = () => {
+    switch(activeSection) {
+      case 'trending': return '🔥 Trending Manhwa';
+      case 'history': return '📖 My Reading History';
+      case 'updates': return '🔔 Latest Updates';
+      case 'library': return '📚 My Library';
+      default: return '🔥 Trending Manhwa';
+    }
+  };
+
+  const getSectionContent = () => {
+    if (searchQuery) return filteredManhwa;
+    
+    switch(activeSection) {
+      case 'trending': return filteredManhwa;
+      case 'history': return []; // Would load from history API
+      case 'updates': return []; // Would load from updates API  
+      case 'library': return []; // Would load from library API
+      default: return filteredManhwa;
+    }
   };
 
   if (loading) {
     return (
-      <div style={styles.container}>
+      <div style={{...styles.container, ...(isDarkMode ? styles.containerDark : {})}}>
         <div style={styles.loading}>
-          <div style={styles.loadingSpinner}>📚</div>
-          <h2>Loading amazing manhwa...</h2>
-          <p>Discovering the best stories for you...</p>
+          <div style={styles.loadingSpinner}>📱</div>
+          <h2>Loading Webtoons...</h2>
+          <p>Discovering amazing stories...</p>
         </div>
       </div>
     );
@@ -76,111 +113,255 @@ function SimpleApp() {
 
   return (
     <div style={{...styles.container, ...(isDarkMode ? styles.containerDark : {})}}>
-      <Navigation
-        onSearch={handleSearch}
-        user={user}
-        onLogin={() => setShowLoginModal(true)}
-        onLogout={handleLogout}
-      />
-      
-      <button 
-        onClick={toggleTheme}
-        style={{...styles.themeToggle, ...(isDarkMode ? styles.themeToggleDark : {})}}
-        title={`Switch to ${isDarkMode ? 'light' : 'dark'} mode`}
-      >
-        <div style={{...styles.toggleSlider, ...(isDarkMode ? styles.toggleSliderDark : {})}}>
-          {isDarkMode ? '🌙' : '☀️'}
+      {/* Header */}
+      <header style={{...styles.header, ...(isDarkMode ? styles.headerDark : {})}}>
+        <div style={styles.headerContent}>
+          {/* Mobile Hamburger */}
+          {isMobile && (
+            <button 
+              onClick={toggleMenu}
+              style={{...styles.hamburger, ...(isDarkMode ? styles.hamburgerDark : {})}}
+              aria-label="Menu"
+            >
+            <span style={{
+              ...styles.hamburgerLine, 
+              ...(isDarkMode ? styles.hamburgerLineDark : {}),
+              ...(isMenuOpen ? styles.hamburgerLineOpen1 : {})
+            }}></span>
+            <span style={{
+              ...styles.hamburgerLine, 
+              ...(isDarkMode ? styles.hamburgerLineDark : {}),
+              ...(isMenuOpen ? styles.hamburgerLineOpen2 : {})
+            }}></span>
+            <span style={{
+              ...styles.hamburgerLine, 
+              ...(isDarkMode ? styles.hamburgerLineDark : {}),
+              ...(isMenuOpen ? styles.hamburgerLineOpen3 : {})
+            }}></span>
+            </button>
+          )}
+          
+          <h1 style={{...styles.logo, ...(isDarkMode ? styles.logoDark : {})}}>
+            📚 Paimon's Codex
+          </h1>
+          
+          {/* Desktop Navigation */}
+          {!isMobile && (
+            <nav style={styles.desktopNav}>
+            <a 
+              href="#" 
+              onClick={() => setActiveSection('trending')}
+              style={{
+                ...styles.navItem, 
+                ...(activeSection === 'trending' ? styles.navItemActive : {}),
+                ...(isDarkMode ? styles.navItemDark : {})
+              }}
+            >
+              🔥 Trending
+            </a>
+            <a 
+              href="#" 
+              onClick={() => setActiveSection('history')}
+              style={{
+                ...styles.navItem, 
+                ...(activeSection === 'history' ? styles.navItemActive : {}),
+                ...(isDarkMode ? styles.navItemDark : {})
+              }}
+            >
+              📖 My History
+            </a>
+            <a 
+              href="#" 
+              onClick={() => setActiveSection('updates')}
+              style={{
+                ...styles.navItem, 
+                ...(activeSection === 'updates' ? styles.navItemActive : {}),
+                ...(isDarkMode ? styles.navItemDark : {})
+              }}
+            >
+              🔔 My Updates
+            </a>
+            <a 
+              href="#" 
+              onClick={() => setActiveSection('library')}
+              style={{
+                ...styles.navItem, 
+                ...(activeSection === 'library' ? styles.navItemActive : {}),
+                ...(isDarkMode ? styles.navItemDark : {})
+              }}
+            >
+              📚 Library
+            </a>
+            </nav>
+          )}
+          
+          <button 
+            onClick={toggleTheme}
+            style={{...styles.themeToggle, ...(isDarkMode ? styles.themeToggleDark : {})}}
+            aria-label="Toggle theme"
+          >
+            {isDarkMode ? '🌙' : '☀️'}
+          </button>
         </div>
-      </button>
-
-      <LoginModal
-        isOpen={showLoginModal}
-        onClose={() => setShowLoginModal(false)}
-        onLogin={handleLogin}
-      />
-
-      <header style={styles.header}>
-        <div style={styles.heroContent}>
-          <h1 style={styles.title}>Discover Your Next Adventure</h1>
-          <p style={styles.subtitle}>
-            Explore thousands of manhwa stories from action-packed adventures to heartwarming romances
-          </p>
-          <div style={styles.stats}>
-            <div style={styles.statItem}>
-              <span style={styles.statNumber}>{manhwa.length}</span>
-              <span style={styles.statLabel}>Manhwa Available</span>
-            </div>
-            <div style={styles.statItem}>
-              <span style={styles.statNumber}>1M+</span>
-              <span style={styles.statLabel}>Happy Readers</span>
-            </div>
-            <div style={styles.statItem}>
-              <span style={styles.statNumber}>50+</span>
-              <span style={styles.statLabel}>Genres</span>
-            </div>
+        
+        {/* Search Bar */}
+        <div style={styles.searchContainer}>
+          <div style={styles.searchWrapper}>
+            <input
+              type="text"
+              placeholder="Search manhwa..."
+              value={searchQuery}
+              onChange={handleSearch}
+              style={{...styles.searchInput, ...(isDarkMode ? styles.searchInputDark : {})}}
+            />
+            {searchQuery && (
+              <button 
+                onClick={clearSearch} 
+                style={{...styles.clearButton, ...(isDarkMode ? styles.clearButtonDark : {})}}
+              >
+                ✕
+              </button>
+            )}
           </div>
         </div>
       </header>
 
+      {/* Mobile Slide-out Menu */}
+      {isMobile && (
+        <div 
+          style={{
+            ...styles.mobileMenu, 
+            ...(isMenuOpen ? styles.mobileMenuOpen : {}),
+            ...(isDarkMode ? styles.mobileMenuDark : {})
+          }}
+          onClick={toggleMenu}
+        >
+        <div 
+          style={{
+            ...styles.menuContent,
+            ...(isDarkMode ? styles.menuContentDark : {}),
+            transform: isMenuOpen ? 'translateX(0)' : 'translateX(-100%)',
+          }} 
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div style={styles.menuHeader}>
+            <h3 style={{...styles.menuTitle, ...(isDarkMode ? styles.menuTitleDark : {})}}>Menu</h3>
+            <button onClick={toggleMenu} style={styles.closeButton}>✕</button>
+          </div>
+          <nav style={styles.menuNav}>
+            <a 
+              href="#" 
+              onClick={() => {setActiveSection('trending'); toggleMenu();}}
+              style={{...styles.menuItem, ...(isDarkMode ? styles.menuItemDark : {})}}
+            >
+              🔥 Trending
+            </a>
+            <a 
+              href="#" 
+              onClick={() => {setActiveSection('history'); toggleMenu();}}
+              style={{...styles.menuItem, ...(isDarkMode ? styles.menuItemDark : {})}}
+            >
+              📖 My History
+            </a>
+            <a 
+              href="#" 
+              onClick={() => {setActiveSection('updates'); toggleMenu();}}
+              style={{...styles.menuItem, ...(isDarkMode ? styles.menuItemDark : {})}}
+            >
+              🔔 My Updates
+            </a>
+            <a 
+              href="#" 
+              onClick={() => {setActiveSection('library'); toggleMenu();}}
+              style={{...styles.menuItem, ...(isDarkMode ? styles.menuItemDark : {})}}
+            >
+              📚 Library
+            </a>
+            <a href="#" style={{...styles.menuItem, ...(isDarkMode ? styles.menuItemDark : {})}}>⭐ Favorites</a>
+            <a href="#" style={{...styles.menuItem, ...(isDarkMode ? styles.menuItemDark : {})}}>👤 Profile</a>
+            <a href="#" style={{...styles.menuItem, ...(isDarkMode ? styles.menuItemDark : {})}}>⚙️ Settings</a>
+          </nav>
+        </div>
+        </div>
+      )}
+
+      {/* Main Content */}
       <main style={styles.main}>
         <div style={styles.sectionHeader}>
-          <h2 style={styles.sectionTitle}>
-            {filteredManhwa.length === manhwa.length 
-              ? '🔥 Trending Now' 
-              : `🔍 Search Results (${filteredManhwa.length})`}
+          <h2 style={{...styles.sectionTitle, ...(isDarkMode ? styles.sectionTitleDark : {})}}>
+            {searchQuery ? `🔍 "${searchQuery}" (${filteredManhwa.length})` : getSectionTitle()}
           </h2>
-          {filteredManhwa.length !== manhwa.length && (
-            <button 
-              onClick={() => setFilteredManhwa(manhwa)}
-              style={styles.clearSearchButton}
-            >
-              ✕ Clear Search
-            </button>
-          )}
         </div>
 
-        {filteredManhwa.length === 0 ? (
+        {getSectionContent().length === 0 ? (
           <div style={styles.noResults}>
-            <div style={styles.noResultsIcon}>😔</div>
-            <h3>No manhwa found</h3>
-            <p>Try searching with different keywords or browse our full collection.</p>
-            <button 
-              onClick={() => setFilteredManhwa(manhwa)}
-              style={styles.browseButton}
-            >
-              Browse All Manhwa
-            </button>
+            <div style={styles.noResultsIcon}>
+              {activeSection === 'history' ? '📖' : 
+               activeSection === 'updates' ? '🔔' : 
+               activeSection === 'library' ? '📚' : '😔'}
+            </div>
+            <h3 style={{...styles.noResultsTitle, ...(isDarkMode ? styles.noResultsTitleDark : {})}}>
+              {activeSection === 'history' ? 'No reading history yet' :
+               activeSection === 'updates' ? 'No new updates' :
+               activeSection === 'library' ? 'Your library is empty' :
+               searchQuery ? 'No manhwa found' : 'No content available'}
+            </h3>
+            <p style={{...styles.noResultsText, ...(isDarkMode ? styles.noResultsTextDark : {})}}>
+              {activeSection === 'history' ? 'Start reading some manhwa to build your history' :
+               activeSection === 'updates' ? 'Check back later for new chapters' :
+               activeSection === 'library' ? 'Add manhwa to your library to keep track' :
+               searchQuery ? 'Try different keywords or browse our collection' : 'Content will appear here'}
+            </p>
+            {searchQuery && (
+              <button onClick={clearSearch} style={styles.browseButton}>
+                Browse All
+              </button>
+            )}
           </div>
         ) : (
-          <div style={styles.manhwaGrid}>
-            {filteredManhwa.map((item, index) => (
-              <div key={index} style={styles.manhwaCard}>
-                <div style={styles.cardImage}>
-                  <div style={styles.placeholder}>🎨</div>
-                  <div style={styles.cardOverlay}>
-                    <button style={styles.actionButton}>👁️ Read</button>
-                    <button style={styles.actionButton}>❤️</button>
-                    <button style={styles.actionButton}>📚</button>
+          <div style={styles.webtoonGrid}>
+            {getSectionContent().map((item, index) => (
+              <div 
+                key={index} 
+                style={{...styles.webtoonCard, ...(isDarkMode ? styles.webtoonCardDark : {})}}
+                onClick={() => console.log('Open webtoon:', item.title)}
+              >
+                <div style={styles.cardImageContainer}>
+                  <div style={styles.cardImage}>
+                    <div style={styles.imagePlaceholder}>📱</div>
+                  </div>
+                  <div style={styles.statusBadge}>
+                    {item.status === 'completed' ? '✅' : '🔄'}
                   </div>
                 </div>
-                <div style={styles.cardContent}>
-                  <div style={styles.cardHeader}>
-                    <h3 style={styles.manhwaTitle}>{item.title}</h3>
-                    <span style={styles.status}>{item.status}</span>
-                  </div>
-                  <p style={styles.author}>by {item.author}</p>
-                  <div style={styles.genres}>
-                    {item.genre.map((g, i) => (
-                      <span key={i} style={styles.genreTag}>{g}</span>
+                
+                <div style={styles.cardInfo}>
+                  <h3 style={{...styles.cardTitle, ...(isDarkMode ? styles.cardTitleDark : {})}}>
+                    {item.title}
+                  </h3>
+                  <p style={{...styles.cardAuthor, ...(isDarkMode ? styles.cardAuthorDark : {})}}>
+                    {item.author}
+                  </p>
+                  <div style={styles.genreContainer}>
+                    {item.genre.slice(0, 2).map((g, i) => (
+                      <span key={i} style={{...styles.genreBadge, ...(isDarkMode ? styles.genreBadgeDark : {})}}>
+                        {g}
+                      </span>
                     ))}
+                    {item.genre.length > 2 && (
+                      <span style={{...styles.genreBadge, ...(isDarkMode ? styles.genreBadgeDark : {})}}>
+                        +{item.genre.length - 2}
+                      </span>
+                    )}
                   </div>
-                  <p style={styles.description}>{item.description}</p>
                   <div style={styles.cardFooter}>
                     <div style={styles.rating}>
-                      <span style={styles.stars}>⭐⭐⭐⭐⭐</span>
-                      <span style={styles.ratingText}>4.8</span>
+                      <span style={styles.stars}>⭐</span>
+                      <span style={{...styles.ratingText, ...(isDarkMode ? styles.ratingTextDark : {})}}>4.8</span>
                     </div>
-                    <span style={styles.chapters}>120 chapters</span>
+                    <span style={{...styles.chapterCount, ...(isDarkMode ? styles.chapterCountDark : {})}}>
+                      120 Ch.
+                    </span>
                   </div>
                 </div>
               </div>
@@ -188,306 +369,485 @@ function SimpleApp() {
           </div>
         )}
       </main>
-
-      <footer style={styles.footer}>
-        <p>
-          <a href="/docs" style={styles.link}>API Documentation</a> | 
-          <a href="/api/v1/manhwa/" style={styles.link}>Raw API Data</a>
-        </p>
-      </footer>
     </div>
   );
 }
 
 const styles = {
+  // Base Container
   container: {
     minHeight: '100vh',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    background: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)',
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-    color: '#ffffff',
+    color: '#0f172a',
+    overflow: 'hidden',
   },
+  containerDark: {
+    background: 'linear-gradient(135deg, #1e293b 0%, #374151 100%)',
+    color: '#f9fafb',
+  },
+  
+  // Header
   header: {
-    textAlign: 'center',
-    padding: '4rem 2rem',
-    background: 'rgba(255, 255, 255, 0.05)',
-    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+    position: 'sticky',
+    top: 0,
+    zIndex: 100,
+    background: 'rgba(255, 255, 255, 0.95)',
+    backdropFilter: 'blur(20px)',
+    borderBottom: '1px solid rgba(203, 213, 225, 0.6)',
+    padding: '0',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
   },
-  heroContent: {
-    maxWidth: '800px',
-    margin: '0 auto',
+  headerDark: {
+    background: 'rgba(30, 41, 59, 0.95)',
+    borderBottom: '1px solid rgba(75, 85, 99, 0.6)',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)',
   },
-  title: {
-    fontSize: '3.5rem',
-    margin: '0 0 1rem 0',
+  headerContent: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '12px 16px',
+    height: '56px',
+  },
+  
+  // Hamburger Menu
+  hamburger: {
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    padding: '8px',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    width: '32px',
+    height: '32px',
+  },
+  hamburgerDark: {
+    color: '#f1f5f9',
+  },
+  hamburgerLine: {
+    width: '20px',
+    height: '2px',
+    background: '#374151',
+    margin: '2px 0',
+    transition: 'all 0.3s ease',
+    transformOrigin: 'center',
+  },
+  hamburgerLineDark: {
+    background: '#e5e7eb',
+  },
+  hamburgerLineOpen1: {
+    transform: 'rotate(45deg) translateY(6px)',
+  },
+  hamburgerLineOpen2: {
+    opacity: 0,
+  },
+  hamburgerLineOpen3: {
+    transform: 'rotate(-45deg) translateY(-6px)',
+  },
+  
+  // Logo
+  logo: {
+    fontSize: '18px',
     fontWeight: '700',
-    textShadow: '2px 2px 8px rgba(0,0,0,0.3)',
-    lineHeight: '1.2',
+    margin: 0,
+    flex: 1,
+    textAlign: 'center',
+    color: '#111827',
+    '@media (min-width: 768px)': {
+      textAlign: 'left',
+      flex: 'none',
+      marginRight: '2rem',
+    },
   },
-  subtitle: {
-    fontSize: '1.3rem',
-    margin: '0 0 3rem 0',
-    opacity: 0.9,
-    lineHeight: '1.6',
+  logoDark: {
+    color: '#f9fafb',
   },
-  stats: {
+  
+  // Desktop Navigation
+  desktopNav: {
+    display: 'flex',
+    gap: '0',
+    alignItems: 'center',
+  },
+  navItem: {
+    padding: '8px 16px',
+    color: '#374151',
+    textDecoration: 'none',
+    fontSize: '14px',
+    fontWeight: '500',
+    borderRadius: '6px',
+    transition: 'all 0.2s ease',
+    whiteSpace: 'nowrap',
+    cursor: 'pointer',
+  },
+  navItemDark: {
+    color: '#d1d5db',
+  },
+  navItemActive: {
+    background: 'rgba(99, 102, 241, 0.15)',
+    color: '#4f46e5',
+    fontWeight: '600',
+  },
+  
+  // Theme Toggle
+  themeToggle: {
+    background: 'rgba(255, 255, 255, 0.2)',
+    border: 'none',
+    borderRadius: '20px',
+    padding: '8px 12px',
+    cursor: 'pointer',
+    fontSize: '16px',
+    transition: 'all 0.3s ease',
+  },
+  themeToggleDark: {
+    background: 'rgba(15, 23, 42, 0.5)',
+  },
+  
+  // Search Container
+  searchContainer: {
+    padding: '0 16px 12px 16px',
     display: 'flex',
     justifyContent: 'center',
-    gap: '3rem',
-    flexWrap: 'wrap',
   },
-  statItem: {
-    textAlign: 'center',
+  searchWrapper: {
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center',
+    width: '100%',
+    maxWidth: '600px', // Constrain width on desktop
   },
-  statNumber: {
-    display: 'block',
-    fontSize: '2.5rem',
-    fontWeight: '700',
-    color: '#ffffff',
-    textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
+  searchInput: {
+    width: '100%',
+    padding: '12px 16px',
+    paddingRight: '40px',
+    border: '1px solid rgba(209, 213, 219, 0.8)',
+    borderRadius: '25px',
+    background: 'rgba(255, 255, 255, 0.9)',
+    color: '#111827',
+    fontSize: '16px',
+    outline: 'none',
+    transition: 'all 0.2s ease',
   },
-  statLabel: {
-    fontSize: '0.9rem',
-    opacity: 0.8,
-    textTransform: 'uppercase',
-    letterSpacing: '1px',
+  searchInputDark: {
+    background: 'rgba(55, 65, 81, 0.9)',
+    color: '#f9fafb',
+    border: '1px solid rgba(75, 85, 99, 0.8)',
   },
-  main: {
-    padding: '3rem 2rem',
-    maxWidth: '1400px',
-    margin: '0 auto',
+  clearButton: {
+    position: 'absolute',
+    right: '12px',
+    background: 'none',
+    border: 'none',
+    color: '#64748b',
+    cursor: 'pointer',
+    fontSize: '16px',
+    padding: '4px',
   },
-  sectionHeader: {
+  clearButtonDark: {
+    color: '#94a3b8',
+  },
+  
+  // Mobile Menu
+  mobileMenu: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    background: 'rgba(0, 0, 0, 0.5)',
+    zIndex: 1000,
+    opacity: 0,
+    visibility: 'hidden',
+    transition: 'all 0.3s ease',
+  },
+  mobileMenuOpen: {
+    opacity: 1,
+    visibility: 'visible',
+  },
+  mobileMenuDark: {
+    background: 'rgba(0, 0, 0, 0.8)',
+  },
+  menuContent: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    width: '280px',
+    height: '100%',
+    background: 'rgba(248, 250, 252, 0.95)',
+    backdropFilter: 'blur(20px)',
+    transform: 'translateX(-100%)',
+    transition: 'transform 0.3s ease',
+    padding: '20px',
+    boxSizing: 'border-box',
+    borderRight: '1px solid rgba(226, 232, 240, 0.8)',
+  },
+  menuContentDark: {
+    background: 'rgba(15, 23, 42, 0.95)',
+    borderRight: '1px solid rgba(51, 65, 85, 0.8)',
+  },
+  mobileMenuOpen: {
+    opacity: 1,
+    visibility: 'visible',
+  },
+  menuHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: '2rem',
+    marginBottom: '30px',
+    paddingBottom: '15px',
+    borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+  },
+  menuTitle: {
+    margin: 0,
+    fontSize: '20px',
+    fontWeight: '700',
+    color: '#111827',
+  },
+  menuTitleDark: {
+    color: '#f9fafb',
+  },
+  closeButton: {
+    background: 'none',
+    border: 'none',
+    fontSize: '24px',
+    cursor: 'pointer',
+    color: '#666',
+    padding: '4px',
+  },
+  menuNav: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  menuItem: {
+    display: 'block',
+    padding: '15px 0',
+    color: '#374151',
+    textDecoration: 'none',
+    fontSize: '16px',
+    fontWeight: '500',
+    borderBottom: '1px solid rgba(0, 0, 0, 0.05)',
+    transition: 'color 0.3s ease',
+    cursor: 'pointer',
+  },
+  menuItemDark: {
+    color: '#e5e7eb',
+    borderBottom: '1px solid rgba(229, 231, 235, 0.1)',
+  },
+  
+  // Main Content
+  main: {
+    padding: '20px 16px',
+    paddingBottom: '80px',
+    maxHeight: 'calc(100vh - 140px)',
+    overflowY: 'auto',
+  },
+  
+  // Section Header
+  sectionHeader: {
+    marginBottom: '20px',
   },
   sectionTitle: {
-    fontSize: '2rem',
-    fontWeight: '600',
-    margin: 0,
+    fontSize: '20px',
+    fontWeight: '700',
+    margin: '0',
+    color: '#111827',
   },
-  clearSearchButton: {
-    background: 'rgba(255, 255, 255, 0.2)',
-    border: '1px solid rgba(255, 255, 255, 0.3)',
-    borderRadius: '20px',
-    padding: '0.5rem 1rem',
-    color: '#ffffff',
-    fontSize: '0.9rem',
-    cursor: 'pointer',
-    transition: 'all 0.3s ease',
+  sectionTitleDark: {
+    color: '#f9fafb',
   },
+  
+  // Loading
   loading: {
     textAlign: 'center',
-    padding: '6rem 2rem',
+    padding: '60px 20px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '80vh',
   },
   loadingSpinner: {
-    fontSize: '4rem',
-    marginBottom: '2rem',
+    fontSize: '48px',
+    marginBottom: '20px',
     animation: 'spin 2s linear infinite',
   },
+  
+  // No Results
   noResults: {
     textAlign: 'center',
-    padding: '4rem 2rem',
+    padding: '60px 20px',
   },
   noResultsIcon: {
-    fontSize: '4rem',
-    marginBottom: '1rem',
+    fontSize: '48px',
+    marginBottom: '16px',
+  },
+  noResultsTitle: {
+    fontSize: '18px',
+    fontWeight: '600',
+    margin: '0 0 8px 0',
+    color: '#111827',
+  },
+  noResultsTitleDark: {
+    color: '#f9fafb',
+  },
+  noResultsText: {
+    fontSize: '14px',
+    color: '#6b7280',
+    margin: '0 0 24px 0',
+  },
+  noResultsTextDark: {
+    color: '#d1d5db',
   },
   browseButton: {
     background: 'rgba(255, 255, 255, 0.2)',
-    border: '2px solid rgba(255, 255, 255, 0.4)',
+    border: '2px solid rgba(255, 255, 255, 0.3)',
     borderRadius: '25px',
-    padding: '1rem 2rem',
+    padding: '12px 24px',
     color: '#ffffff',
-    fontSize: '1rem',
+    fontSize: '14px',
     fontWeight: '600',
     cursor: 'pointer',
-    marginTop: '1rem',
     transition: 'all 0.3s ease',
   },
-  manhwaGrid: {
+  
+  // Webtoon Grid
+  webtoonGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-    gap: '2rem',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+    gap: '16px',
+    '@media (min-width: 768px)': {
+      gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+      gap: '20px',
+    },
   },
-  manhwaCard: {
-    background: 'rgba(255, 255, 255, 0.15)',
-    backdropFilter: 'blur(15px)',
-    borderRadius: '20px',
-    border: '1px solid rgba(255, 255, 255, 0.2)',
-    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+  
+  // Webtoon Card
+  webtoonCard: {
+    background: 'rgba(255, 255, 255, 0.8)',
+    backdropFilter: 'blur(10px)',
+    borderRadius: '12px',
+    border: '1px solid rgba(209, 213, 219, 0.4)',
+    overflow: 'hidden',
     cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+  },
+  webtoonCardDark: {
+    background: 'rgba(55, 65, 81, 0.8)',
+    border: '1px solid rgba(75, 85, 99, 0.4)',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+  },
+  
+  // Card Image Container
+  cardImageContainer: {
+    position: 'relative',
+    width: '100%',
+    paddingBottom: '140%', // 5:7 aspect ratio for webtoon covers
     overflow: 'hidden',
   },
   cardImage: {
-    position: 'relative',
-    height: '200px',
-    background: 'rgba(255, 255, 255, 0.1)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  placeholder: {
-    fontSize: '3rem',
-    opacity: 0.5,
-  },
-  cardOverlay: {
     position: 'absolute',
     top: 0,
     left: 0,
-    right: 0,
-    bottom: 0,
-    background: 'rgba(0, 0, 0, 0.7)',
+    width: '100%',
+    height: '100%',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '1rem',
-    opacity: 0,
-    transition: 'opacity 0.3s ease',
+    background: 'rgba(255, 255, 255, 0.05)',
   },
-  actionButton: {
-    background: 'rgba(255, 255, 255, 0.9)',
-    border: 'none',
-    borderRadius: '50%',
-    width: '40px',
-    height: '40px',
-    cursor: 'pointer',
-    fontSize: '1rem',
-    transition: 'transform 0.2s ease',
+  imagePlaceholder: {
+    fontSize: '32px',
+    opacity: 0.6,
   },
-  cardContent: {
-    padding: '1.5rem',
+  statusBadge: {
+    position: 'absolute',
+    top: '8px',
+    right: '8px',
+    fontSize: '12px',
+    background: 'rgba(0, 0, 0, 0.7)',
+    borderRadius: '12px',
+    padding: '4px 8px',
   },
-  cardHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: '0.5rem',
+  
+  // Card Info
+  cardInfo: {
+    padding: '12px',
   },
-  manhwaTitle: {
-    fontSize: '1.4rem',
-    margin: 0,
+  cardTitle: {
+    fontSize: '14px',
     fontWeight: '600',
-    flex: 1,
-  },
-  status: {
-    padding: '0.3rem 0.8rem',
-    borderRadius: '20px',
-    fontSize: '0.8rem',
-    fontWeight: '500',
-    background: 'rgba(255, 255, 255, 0.2)',
-    marginLeft: '1rem',
-  },
-  author: {
-    fontSize: '1rem',
-    margin: '0 0 1rem 0',
-    opacity: 0.8,
-    fontStyle: 'italic',
-  },
-  genres: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '0.5rem',
-    marginBottom: '1rem',
-  },
-  genreTag: {
-    padding: '0.3rem 0.8rem',
-    background: 'rgba(255, 255, 255, 0.3)',
-    borderRadius: '15px',
-    fontSize: '0.85rem',
-    fontWeight: '500',
-  },
-  description: {
-    fontSize: '0.95rem',
-    lineHeight: '1.6',
-    margin: '0 0 1rem 0',
-    opacity: 0.9,
+    margin: '0 0 4px 0',
+    color: '#111827',
+    lineHeight: '1.3',
     display: '-webkit-box',
-    WebkitLineClamp: 3,
+    WebkitLineClamp: 2,
     WebkitBoxOrient: 'vertical',
     overflow: 'hidden',
   },
+  cardTitleDark: {
+    color: '#f9fafb',
+  },
+  cardAuthor: {
+    fontSize: '12px',
+    color: '#6b7280',
+    margin: '0 0 8px 0',
+    fontStyle: 'italic',
+  },
+  cardAuthorDark: {
+    color: '#d1d5db',
+  },
+  
+  // Genre Container
+  genreContainer: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '4px',
+    marginBottom: '8px',
+  },
+  genreBadge: {
+    background: 'rgba(209, 213, 219, 0.6)',
+    color: '#374151',
+    padding: '2px 6px',
+    borderRadius: '8px',
+    fontSize: '10px',
+    fontWeight: '500',
+  },
+  genreBadgeDark: {
+    background: 'rgba(75, 85, 99, 0.6)',
+    color: '#e5e7eb',
+  },
+  
+  // Card Footer
   cardFooter: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: '1rem',
-    borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+    fontSize: '11px',
   },
   rating: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.5rem',
+    gap: '4px',
   },
   stars: {
-    fontSize: '0.8rem',
+    fontSize: '10px',
   },
   ratingText: {
-    fontSize: '0.9rem',
     fontWeight: '600',
+    color: '#374151',
   },
-  chapters: {
-    fontSize: '0.85rem',
-    opacity: 0.7,
+  ratingTextDark: {
+    color: '#e5e7eb',
   },
-  footer: {
-    textAlign: 'center',
-    padding: '2rem',
-    background: 'rgba(0, 0, 0, 0.2)',
-    borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-  },
-  link: {
-    color: '#ffffff',
-    textDecoration: 'none',
-    margin: '0 1rem',
+  chapterCount: {
+    color: '#6b7280',
     fontWeight: '500',
-    borderBottom: '1px solid transparent',
-    transition: 'border-color 0.3s ease',
   },
-  // Theme Toggle Styles
-  themeToggle: {
-    position: 'fixed',
-    top: '20px',
-    right: '20px',
-    background: 'rgba(255, 255, 255, 0.2)',
-    border: '2px solid rgba(255, 255, 255, 0.3)',
-    borderRadius: '50px',
-    padding: '8px',
-    width: '70px',
-    height: '36px',
-    cursor: 'pointer',
-    transition: 'all 0.3s ease',
-    display: 'flex',
-    alignItems: 'center',
-    zIndex: 1000,
-    backdropFilter: 'blur(10px)',
-  },
-  themeToggleDark: {
-    background: 'rgba(15, 23, 42, 0.8)',
-    border: '2px solid rgba(241, 245, 249, 0.3)',
-  },
-  toggleSlider: {
-    background: '#fbbf24',
-    width: '26px',
-    height: '26px',
-    borderRadius: '50%',
-    transition: 'all 0.3s ease',
-    transform: 'translateX(0px)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '14px',
-    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
-  },
-  toggleSliderDark: {
-    background: '#f1f5f9',
-    transform: 'translateX(32px)',
-  },
-  // Dark Theme Styles
-  containerDark: {
-    background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
+  chapterCountDark: {
+    color: '#9ca3af',
   },
 };
 
