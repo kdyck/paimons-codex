@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import styled, { ThemeProvider as StyledThemeProvider } from 'styled-components';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import HomePage from './pages/HomePage';
+import LibraryPage from './pages/LibraryPage';
 import Header from './components/Header';
 
 const AppContainer = styled.div`
@@ -21,6 +22,7 @@ const AppContent: React.FC = () => {
           <Header />
           <Routes>
             <Route path="/" element={<HomePage />} />
+            <Route path="/library" element={<LibraryPage />} />
           </Routes>
         </Router>
       </AppContainer>

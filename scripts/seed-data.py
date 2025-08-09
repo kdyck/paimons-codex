@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 """
 Seed script to populate the database with sample manhwa data
 """

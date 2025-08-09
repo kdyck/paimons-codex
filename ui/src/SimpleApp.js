@@ -13,6 +13,14 @@ function SimpleApp() {
     const saved = localStorage.getItem('darkMode');
     return saved ? JSON.parse(saved) : true; // Default to dark mode
   });
+  const [selectedManhwa, setSelectedManhwa] = useState(null);
+  const [favorites, setFavorites] = useState(() => {
+    const saved = localStorage.getItem('paimons-favorites');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [readerMode, setReaderMode] = useState(false);
+  const [currentReading, setCurrentReading] = useState(null);
+  const [currentChapter, setCurrentChapter] = useState(1);
 
   useEffect(() => {
     const handleResize = () => {
@@ -37,12 +45,52 @@ function SimpleApp() {
     localStorage.setItem('darkMode', JSON.stringify(isDarkMode));
   }, [isDarkMode]);
 
+  useEffect(() => {
+    localStorage.setItem('paimons-favorites', JSON.stringify(favorites));
+  }, [favorites]);
+
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
   };
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const toggleFavorite = (manhwa) => {
+    setFavorites(prevFavorites => {
+      const isAlreadyFavorite = prevFavorites.some(fav => fav.id === manhwa.id);
+      if (isAlreadyFavorite) {
+        return prevFavorites.filter(fav => fav.id !== manhwa.id);
+      } else {
+        return [...prevFavorites, manhwa];
+      }
+    });
+  };
+
+  const isFavorite = (manhwaId) => {
+    return favorites.some(fav => fav.id === manhwaId);
+  };
+
+  const startReading = (manhwa) => {
+    setCurrentReading(manhwa);
+    setCurrentChapter(1);
+    setReaderMode(true);
+    setSelectedManhwa(null); // Close modal
+    setIsMenuOpen(false); // Close menu if open
+  };
+
+  const exitReader = () => {
+    setReaderMode(false);
+    setCurrentReading(null);
+  };
+
+  const nextChapter = () => {
+    setCurrentChapter(prev => prev + 1);
+  };
+
+  const prevChapter = () => {
+    setCurrentChapter(prev => Math.max(1, prev - 1));
   };
 
   useEffect(() => {
@@ -161,8 +209,8 @@ function SimpleApp() {
       case 'trending': return filteredManhwa;
       case 'history': return []; // Would load from history API
       case 'updates': return []; // Would load from updates API  
-      case 'library': return []; // Would load from library API
-      case 'favorites': return []; // Would load from favorites API
+      case 'library': return filteredManhwa; // Show all manhwa in library for now
+      case 'favorites': return favorites; // Show user's favorites
       case 'settings': return []; // Settings page content
       default: return filteredManhwa;
     }
@@ -180,6 +228,99 @@ function SimpleApp() {
           </div>
           <h2>Loading Webtoons...</h2>
           <p>Discovering amazing stories...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Reader Mode
+  if (readerMode && currentReading) {
+    return (
+      <div style={{...styles.readerContainer, ...(isDarkMode ? styles.readerContainerDark : {})}}>
+        {/* Reader Header */}
+        <div style={{...styles.readerHeader, ...(isDarkMode ? styles.readerHeaderDark : {})}}>
+          <button 
+            style={{...styles.readerBackButton, ...(isDarkMode ? styles.readerBackButtonDark : {})}}
+            onClick={exitReader}
+          >
+            ← Back
+          </button>
+          <div style={styles.readerInfo}>
+            <h2 style={{...styles.readerTitle, ...(isDarkMode ? styles.readerTitleDark : {})}}>
+              {currentReading.title}
+            </h2>
+            <p style={{...styles.readerChapter, ...(isDarkMode ? styles.readerChapterDark : {})}}>
+              Chapter {currentChapter}
+            </p>
+          </div>
+          <div style={styles.readerControls}>
+            <button 
+              style={{...styles.readerNavButton, ...(isDarkMode ? styles.readerNavButtonDark : {}), ...(currentChapter <= 1 ? styles.readerNavButtonDisabled : {})}}
+              onClick={prevChapter}
+              disabled={currentChapter <= 1}
+            >
+              Previous
+            </button>
+            <button 
+              style={{...styles.readerNavButton, ...(isDarkMode ? styles.readerNavButtonDark : {})}}
+              onClick={nextChapter}
+            >
+              Next
+            </button>
+          </div>
+        </div>
+
+        {/* Reader Content */}
+        <div style={styles.readerContent}>
+          <div style={styles.readerPages}>
+            {/* Generate mock pages for demonstration */}
+            {Array.from({ length: 20 }, (_, index) => (
+              <div 
+                key={index} 
+                style={{...styles.readerPage, ...(isDarkMode ? styles.readerPageDark : {})}}
+              >
+                <div style={styles.readerPageContent}>
+                  <div style={styles.readerPanel}>
+                    <div style={styles.mockPanel}>
+                      <h3 style={{...styles.mockPanelTitle, ...(isDarkMode ? styles.mockPanelTitleDark : {})}}>
+                        {currentReading.title} - Chapter {currentChapter}
+                      </h3>
+                      <p style={{...styles.mockPanelText, ...(isDarkMode ? styles.mockPanelTextDark : {})}}>
+                        Panel {index + 1}: This is where the manhwa content would be displayed. 
+                        In a real implementation, this would show actual manhwa pages or panels 
+                        loaded from a content management system or API.
+                      </p>
+                      <div style={styles.mockCharacter}>
+                        <div style={{...styles.mockSpeechBubble, ...(isDarkMode ? styles.mockSpeechBubbleDark : {})}}>
+                          "This is sample dialogue for panel {index + 1}"
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Chapter Navigation Footer */}
+          <div style={{...styles.readerFooter, ...(isDarkMode ? styles.readerFooterDark : {})}}>
+            <button 
+              style={{...styles.readerNavButton, ...(isDarkMode ? styles.readerNavButtonDark : {}), ...(currentChapter <= 1 ? styles.readerNavButtonDisabled : {})}}
+              onClick={prevChapter}
+              disabled={currentChapter <= 1}
+            >
+              ← Previous Chapter
+            </button>
+            <span style={{...styles.readerChapterInfo, ...(isDarkMode ? styles.readerChapterInfoDark : {})}}>
+              Chapter {currentChapter}
+            </span>
+            <button 
+              style={{...styles.readerNavButton, ...(isDarkMode ? styles.readerNavButtonDark : {})}}
+              onClick={nextChapter}
+            >
+              Next Chapter →
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -607,7 +748,7 @@ function SimpleApp() {
               <div 
                 key={index} 
                 style={{...styles.webtoonCard, ...(isDarkMode ? styles.webtoonCardDark : {})}}
-                onClick={() => console.log('Open webtoon:', item.title)}
+                onClick={() => setSelectedManhwa(item)}
               >
                 <div style={styles.cardImageContainer}>
                   <div style={styles.cardImage}>
@@ -632,6 +773,11 @@ function SimpleApp() {
                       </svg>
                     )}
                   </div>
+                  {isFavorite(item.id) && (
+                    <div style={styles.favoriteIndicator}>
+                      ❤️
+                    </div>
+                  )}
                 </div>
                 
                 <div style={styles.cardInfo}>
@@ -742,6 +888,47 @@ function SimpleApp() {
           </div>
         </div>
       </footer>
+
+      {/* Manhwa Detail Modal */}
+      {selectedManhwa && (
+        <div style={{...styles.modalOverlay, ...(isDarkMode ? styles.modalOverlayDark : {})}} onClick={() => setSelectedManhwa(null)}>
+          <div style={{...styles.modalContent, ...(isDarkMode ? styles.modalContentDark : {})}} onClick={(e) => e.stopPropagation()}>
+            <div style={styles.modalHeader}>
+              <h2 style={{...styles.modalTitle, ...(isDarkMode ? styles.modalTitleDark : {})}}>{selectedManhwa.title}</h2>
+              <button style={{...styles.closeButton, ...(isDarkMode ? styles.closeButtonDark : {})}} onClick={() => setSelectedManhwa(null)}>×</button>
+            </div>
+            <div style={styles.modalBody}>
+              <div style={styles.modalInfo}>
+                <p style={{...styles.modalAuthor, ...(isDarkMode ? styles.modalAuthorDark : {})}}><strong>Author:</strong> {selectedManhwa.author}</p>
+                <p style={{...styles.modalStatus, ...(isDarkMode ? styles.modalStatusDark : {})}}><strong>Status:</strong> {selectedManhwa.status}</p>
+                <p style={{...styles.modalGenres, ...(isDarkMode ? styles.modalGenresDark : {})}}><strong>Genres:</strong> {Array.isArray(selectedManhwa.genre) ? selectedManhwa.genre.join(', ') : selectedManhwa.genre}</p>
+              </div>
+              <div style={styles.modalDescription}>
+                <h3 style={{...styles.modalDescTitle, ...(isDarkMode ? styles.modalDescTitleDark : {})}}>Description</h3>
+                <p style={{...styles.modalDescText, ...(isDarkMode ? styles.modalDescTextDark : {})}}>{selectedManhwa.description}</p>
+              </div>
+              <div style={styles.modalActions}>
+                <button 
+                  style={{...styles.readButton, ...(isDarkMode ? styles.readButtonDark : {})}}
+                  onClick={() => startReading(selectedManhwa)}
+                >
+                  Start Reading
+                </button>
+                <button 
+                  style={{
+                    ...styles.favoriteButton, 
+                    ...(isDarkMode ? styles.favoriteButtonDark : {}),
+                    ...(isFavorite(selectedManhwa.id) ? styles.favoriteButtonActive : {})
+                  }}
+                  onClick={() => toggleFavorite(selectedManhwa)}
+                >
+                  {isFavorite(selectedManhwa.id) ? '❤️ Remove from Favorites' : '🤍 Add to Favorites'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1419,6 +1606,350 @@ const styles = {
   },
   footerDividerDark: {
     color: '#4b5563',
+  },
+
+  // Modal Styles
+  modalOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+    padding: '20px',
+  },
+  modalOverlayDark: {
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+  },
+  modalContent: {
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backdropFilter: 'blur(20px)',
+    borderRadius: '20px',
+    maxWidth: '600px',
+    width: '100%',
+    maxHeight: '90vh',
+    overflow: 'auto',
+    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+  },
+  modalContentDark: {
+    backgroundColor: 'rgba(30, 30, 30, 0.95)',
+    color: '#ffffff',
+  },
+  modalHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '24px 24px 12px 24px',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
+  },
+  modalTitle: {
+    margin: 0,
+    fontSize: '24px',
+    fontWeight: '700',
+    color: '#333333',
+  },
+  modalTitleDark: {
+    color: '#ffffff',
+  },
+  closeButton: {
+    background: 'none',
+    border: 'none',
+    fontSize: '30px',
+    cursor: 'pointer',
+    color: '#666666',
+    padding: '0',
+    width: '40px',
+    height: '40px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: '50%',
+    transition: 'background 0.2s',
+  },
+  closeButtonDark: {
+    color: '#cccccc',
+  },
+  modalBody: {
+    padding: '24px',
+  },
+  modalInfo: {
+    marginBottom: '20px',
+  },
+  modalAuthor: {
+    margin: '8px 0',
+    color: '#555555',
+  },
+  modalAuthorDark: {
+    color: '#cccccc',
+  },
+  modalStatus: {
+    margin: '8px 0',
+    color: '#555555',
+  },
+  modalStatusDark: {
+    color: '#cccccc',
+  },
+  modalGenres: {
+    margin: '8px 0',
+    color: '#555555',
+  },
+  modalGenresDark: {
+    color: '#cccccc',
+  },
+  modalDescription: {
+    marginBottom: '24px',
+  },
+  modalDescTitle: {
+    fontSize: '18px',
+    fontWeight: '600',
+    marginBottom: '12px',
+    color: '#333333',
+  },
+  modalDescTitleDark: {
+    color: '#ffffff',
+  },
+  modalDescText: {
+    lineHeight: '1.6',
+    color: '#666666',
+  },
+  modalDescTextDark: {
+    color: '#cccccc',
+  },
+  modalActions: {
+    display: 'flex',
+    gap: '12px',
+    flexWrap: 'wrap',
+  },
+  readButton: {
+    backgroundColor: '#667eea',
+    color: 'white',
+    border: 'none',
+    padding: '12px 24px',
+    borderRadius: '12px',
+    fontSize: '16px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'background 0.2s',
+  },
+  readButtonDark: {
+    backgroundColor: '#764ba2',
+  },
+  favoriteButton: {
+    backgroundColor: 'transparent',
+    color: '#667eea',
+    border: '2px solid #667eea',
+    padding: '10px 24px',
+    borderRadius: '12px',
+    fontSize: '16px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+  },
+  favoriteButtonDark: {
+    color: '#764ba2',
+    borderColor: '#764ba2',
+  },
+  favoriteButtonActive: {
+    backgroundColor: '#667eea',
+    color: 'white',
+    borderColor: '#667eea',
+  },
+  favoriteIndicator: {
+    position: 'absolute',
+    top: '8px',
+    right: '8px',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    borderRadius: '50%',
+    width: '24px',
+    height: '24px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '12px',
+    zIndex: 2,
+  },
+
+  // Reader Styles
+  readerContainer: {
+    minHeight: '100vh',
+    background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+    color: '#333333',
+  },
+  readerContainerDark: {
+    background: 'linear-gradient(135deg, #2c3e50 0%, #4a6741 100%)',
+    color: '#ffffff',
+  },
+  readerHeader: {
+    position: 'sticky',
+    top: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backdropFilter: 'blur(20px)',
+    padding: '16px 24px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+    zIndex: 100,
+    flexWrap: 'wrap',
+    gap: '16px',
+  },
+  readerHeaderDark: {
+    backgroundColor: 'rgba(30, 30, 30, 0.95)',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+  },
+  readerBackButton: {
+    backgroundColor: 'transparent',
+    border: '2px solid #667eea',
+    color: '#667eea',
+    padding: '8px 16px',
+    borderRadius: '8px',
+    fontSize: '14px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+  },
+  readerBackButtonDark: {
+    borderColor: '#764ba2',
+    color: '#764ba2',
+  },
+  readerInfo: {
+    textAlign: 'center',
+    flex: 1,
+    minWidth: '200px',
+  },
+  readerTitle: {
+    margin: '0 0 4px 0',
+    fontSize: '18px',
+    fontWeight: '700',
+    color: '#333333',
+  },
+  readerTitleDark: {
+    color: '#ffffff',
+  },
+  readerChapter: {
+    margin: 0,
+    fontSize: '14px',
+    color: '#666666',
+  },
+  readerChapterDark: {
+    color: '#cccccc',
+  },
+  readerControls: {
+    display: 'flex',
+    gap: '8px',
+  },
+  readerNavButton: {
+    backgroundColor: '#667eea',
+    color: 'white',
+    border: 'none',
+    padding: '8px 16px',
+    borderRadius: '8px',
+    fontSize: '14px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+  },
+  readerNavButtonDark: {
+    backgroundColor: '#764ba2',
+  },
+  readerNavButtonDisabled: {
+    backgroundColor: '#cccccc',
+    cursor: 'not-allowed',
+    opacity: 0.5,
+  },
+  readerContent: {
+    maxWidth: '800px',
+    margin: '0 auto',
+    padding: '0 24px',
+  },
+  readerPages: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0px',
+  },
+  readerPage: {
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    marginBottom: '2px',
+    borderRadius: '0px',
+    overflow: 'hidden',
+  },
+  readerPageDark: {
+    backgroundColor: 'rgba(40, 40, 40, 0.9)',
+  },
+  readerPageContent: {
+    padding: '0',
+  },
+  readerPanel: {
+    minHeight: '300px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '40px 20px',
+  },
+  mockPanel: {
+    textAlign: 'center',
+    maxWidth: '600px',
+  },
+  mockPanelTitle: {
+    fontSize: '16px',
+    fontWeight: '600',
+    marginBottom: '16px',
+    color: '#333333',
+  },
+  mockPanelTitleDark: {
+    color: '#ffffff',
+  },
+  mockPanelText: {
+    fontSize: '14px',
+    lineHeight: '1.6',
+    color: '#666666',
+    marginBottom: '20px',
+  },
+  mockPanelTextDark: {
+    color: '#cccccc',
+  },
+  mockCharacter: {
+    display: 'flex',
+    justifyContent: 'center',
+  },
+  mockSpeechBubble: {
+    backgroundColor: '#f0f0f0',
+    padding: '12px 20px',
+    borderRadius: '20px',
+    fontSize: '14px',
+    fontStyle: 'italic',
+    color: '#333333',
+    position: 'relative',
+    maxWidth: '300px',
+  },
+  mockSpeechBubbleDark: {
+    backgroundColor: '#333333',
+    color: '#ffffff',
+  },
+  readerFooter: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '40px 0',
+    marginTop: '40px',
+    borderTop: '1px solid rgba(0, 0, 0, 0.1)',
+    flexWrap: 'wrap',
+    gap: '16px',
+  },
+  readerFooterDark: {
+    borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+  },
+  readerChapterInfo: {
+    fontSize: '16px',
+    fontWeight: '600',
+    color: '#333333',
+  },
+  readerChapterInfoDark: {
+    color: '#ffffff',
   },
 };
 

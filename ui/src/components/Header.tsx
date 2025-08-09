@@ -20,6 +20,32 @@ const Logo = styled.h1`
   font-weight: bold;
 `;
 
+const Navigation = styled.nav`
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+`;
+
+const NavLink = styled.button`
+  background: none;
+  border: none;
+  color: ${props => props.theme.colors.text.primary};
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: ${props => props.theme.colors.glass.hover};
+  }
+  
+  &.active {
+    background: ${props => props.theme.colors.glass.background};
+    font-weight: 600;
+  }
+`;
+
 const RightSection = styled.div`
   display: flex;
   gap: 1rem;
@@ -87,6 +113,14 @@ const Header: React.FC = () => {
       <Logo onClick={() => navigate('/')}>
         Paimon's Codex
       </Logo>
+      <Navigation>
+        <NavLink onClick={() => navigate('/')}>
+          Home
+        </NavLink>
+        <NavLink onClick={() => navigate('/library')}>
+          Library
+        </NavLink>
+      </Navigation>
       <RightSection>
         <SearchContainer>
           <SearchInput
