@@ -2,7 +2,38 @@
 
 # Paimon's Codex - Development Start Script
 
-echo "🚀 Starting Paimon's Codex Development Environment..."
+# Function to show usage
+show_usage() {
+    echo "Usage: $0 [service1] [service2] ..."
+    echo ""
+    echo "Available services:"
+    echo "  api        - FastAPI backend service"
+    echo "  ui         - React frontend service"
+    echo "  oracle-db  - Oracle 23ai database"
+    echo "  chromadb   - ChromaDB vector database"
+    echo "  caddy      - Caddy reverse proxy"
+    echo ""
+    echo "Examples:"
+    echo "  $0           # Start all services"
+    echo "  $0 api       # Start only API service"
+    echo "  $0 ui api    # Start UI and API services"
+    echo "  $0 --help    # Show this help"
+    exit 0
+}
+
+# Check for help flag
+if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+    show_usage
+fi
+
+# Get target services
+TARGET_SERVICES="$@"
+if [ -z "$TARGET_SERVICES" ]; then
+    echo "🚀 Starting ALL Paimon's Codex services..."
+    TARGET_SERVICES=""
+else
+    echo "🚀 Starting specified services: $TARGET_SERVICES"
+fi
 
 # Check if Podman is running
 if ! podman info > /dev/null 2>&1; then
@@ -17,13 +48,23 @@ if ! command -v podman-compose &> /dev/null; then
     exit 1
 fi
 
-# Pull latest images
-echo "📥 Pulling latest images..."
-podman-compose pull
+# Pull latest images (only for specified services or all if none specified)
+if [ -z "$TARGET_SERVICES" ]; then
+    echo "📥 Pulling latest images..."
+    podman-compose pull
+else
+    echo "📥 Pulling images for: $TARGET_SERVICES"
+    podman-compose pull $TARGET_SERVICES
+fi
 
 # Build and start services
-echo "🏗️  Building and starting services..."
-podman-compose up --build -d
+if [ -z "$TARGET_SERVICES" ]; then
+    echo "🏗️  Building and starting all services..."
+    podman-compose up --build -d
+else
+    echo "🏗️  Building and starting services: $TARGET_SERVICES"
+    podman-compose up --build -d $TARGET_SERVICES
+fi
 
 # Wait for services to be healthy
 echo "⏳ Waiting for services to start..."
