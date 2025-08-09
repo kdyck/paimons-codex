@@ -7,6 +7,9 @@ class ManhwaService:
         self.chroma_client = ChromaClient()
         self.oracle_client = None
         
+        # In-memory storage for fallback mode (when Oracle is not available)
+        self._memory_storage = []
+        
         # Only initialize Oracle if not skipped
         if not os.getenv('ORACLE_SKIP'):
             try:
@@ -20,30 +23,41 @@ class ManhwaService:
         if self.oracle_client:
             return await self.oracle_client.get_manhwa_list(skip=skip, limit=limit)
         else:
-            # Fallback: return sample data for development
-            return self._get_sample_data()[skip:skip+limit]
+            # Fallback: return sample data + memory storage for development
+            all_data = self._get_sample_data() + self._memory_storage
+            return all_data[skip:skip+limit]
     
     async def get_by_id(self, manhwa_id: str) -> Optional[Dict[str, Any]]:
         if self.oracle_client:
             return await self.oracle_client.get_manhwa_by_id(manhwa_id)
         else:
-            # Fallback: search in sample data
-            sample_data = self._get_sample_data()
-            return next((item for item in sample_data if item["id"] == manhwa_id), None)
+            # Fallback: search in sample data + memory storage
+            all_data = self._get_sample_data() + self._memory_storage
+            return next((item for item in all_data if item["id"] == manhwa_id), None)
     
     async def create(self, manhwa_data: Dict[str, Any]) -> Dict[str, Any]:
         if self.oracle_client:
             manhwa = await self.oracle_client.create_manhwa(manhwa_data)
         else:
-            # Fallback: simulate creation
-            manhwa = {**manhwa_data, "id": manhwa_data.get("id", f"manhwa_{len(self._get_sample_data()) + 1}")}
+            # Fallback: create in memory storage
+            next_id = len(self._get_sample_data()) + len(self._memory_storage) + 1
+            manhwa = {
+                **manhwa_data, 
+                "id": manhwa_data.get("id", f"manhwa_{next_id}")
+            }
+            # Add to memory storage for persistence across requests
+            self._memory_storage.append(manhwa)
+            print(f"Created manhwa in memory: {manhwa['title']} (ID: {manhwa['id']})")
         
-        await self.chroma_client.add_manhwa_embedding(
-            manhwa_id=manhwa["id"],
-            title=manhwa["title"],
-            description=manhwa["description"],
-            genre=manhwa["genre"]
-        )
+        try:
+            await self.chroma_client.add_manhwa_embedding(
+                manhwa_id=manhwa["id"],
+                title=manhwa["title"],
+                description=manhwa["description"],
+                genre=manhwa["genre"]
+            )
+        except Exception as e:
+            print(f"Failed to add embedding for {manhwa['title']}: {e}")
         
         return manhwa
     

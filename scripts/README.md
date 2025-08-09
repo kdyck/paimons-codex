@@ -26,6 +26,7 @@ Start all or specific services in the development environment.
 - `oracle-db` - Oracle 23ai database
 - `chromadb` - ChromaDB vector database
 - `caddy` - Caddy reverse proxy
+- `minio` - MinIO object storage
 
 ### 🛑 `stop.sh` - Stop Services
 Stop all or specific services.
@@ -113,6 +114,15 @@ python scripts/seed-data.py
 ./scripts/stop.sh api oracle-db chromadb
 ```
 
+### Object Storage Development
+```bash
+# Start MinIO and API for image management
+./scripts/start.sh minio api
+
+# When done
+./scripts/stop.sh minio api
+```
+
 ### Quick Restart
 ```bash
 # Restart specific service
@@ -137,11 +147,13 @@ When starting specific services, be aware of dependencies:
 
 - **UI** depends on **API**
 - **API** depends on **ChromaDB** (and optionally **Oracle DB**)
+- **API** can optionally use **MinIO** for image storage
 - **Caddy** proxies to **UI** and **API**
 
 For most development work:
 - Frontend: `./scripts/start.sh ui api`
 - Backend: `./scripts/start.sh api chromadb`
+- With images: `./scripts/start.sh api minio chromadb`
 - Full stack: `./scripts/start.sh` (all services)
 
 ## Troubleshooting
@@ -166,6 +178,8 @@ Default ports:
 - **8000** - FastAPI backend
 - **1521** - Oracle database
 - **8001** - ChromaDB
+- **9000** - MinIO API
+- **9001** - MinIO Console (Web UI)
 - **8080/8443** - Caddy proxy
 
 ### Permission Issues

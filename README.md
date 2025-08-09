@@ -18,6 +18,12 @@ A modern manhwa discovery platform powered by AI, built with FastAPI, React, Ora
          │                       │              └─────────────────┘
          │                       │                       │
          │                       │              ┌─────────────────┐
+         │                       │              │   MinIO         │
+         │                       │              │ (Object Store)  │
+         │                       │              │ Port: 9000/9001 │
+         │                       │              └─────────────────┘
+         │                       │                       │
+         │                       │              ┌─────────────────┐
          │                       │              │  Oracle 23ai    │
          │                       └──────────────│  (Database)     │
          │                                      │   Port: 1521    │
@@ -103,6 +109,8 @@ python scripts/seed-data.py
 - **API Documentation**: http://localhost:8000/docs
 - **Oracle Enterprise Manager**: http://localhost:5500/em
 - **ChromaDB**: http://localhost:8001
+- **MinIO Console**: http://localhost:9001 (Login: `paimons/paimons123`)
+- **MinIO API**: http://localhost:9000
 
 ## 🛠️ Services
 
@@ -127,6 +135,12 @@ python scripts/seed-data.py
 - **Embeddings**: Sentence transformers for manhwa descriptions
 - **Similarity Search**: Semantic search capabilities
 - **Recommendations**: AI-powered similar manhwa suggestions
+
+### MinIO Object Storage
+- **Image Storage**: Manhwa cover images and content
+- **S3-Compatible API**: Standard object storage operations
+- **Web Console**: Browser-based file management interface
+- **Scalable**: High-performance distributed object storage
 
 ### Caddy Reverse Proxy
 - **HTTPS**: Automatic HTTPS certificates
@@ -181,6 +195,11 @@ curl http://localhost:8001/api/v1/collections
 ### Search & Discovery
 - `GET /api/v1/search/?q={query}` - Search manhwa
 - `GET /api/v1/search/similar/{id}` - Find similar manhwa
+
+### Image Management
+- `POST /api/v1/images/upload` - Upload single image
+- `POST /api/v1/images/upload-multiple` - Upload multiple images
+- `DELETE /api/v1/images/{filename}` - Delete image
 
 ### AI Features
 - `POST /api/v1/llm/generate` - Generate text with LLaMA

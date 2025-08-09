@@ -12,6 +12,7 @@ show_usage() {
     echo "  oracle-db  - Oracle 23ai database"
     echo "  chromadb   - ChromaDB vector database"
     echo "  caddy      - Caddy reverse proxy"
+    echo "  minio      - MinIO object storage"
     echo ""
     echo "Examples:"
     echo "  $0           # Stop all services"
@@ -43,7 +44,7 @@ for arg in "$@"; do
         --volumes)
             REMOVE_VOLUMES=true
             ;;
-        api|ui|oracle-db|chromadb|caddy)
+        api|ui|oracle-db|chromadb|caddy|minio)
             TARGET_SERVICES="$TARGET_SERVICES $arg"
             ;;
         *)
