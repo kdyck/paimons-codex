@@ -8,7 +8,7 @@ import { useFavorites } from '../contexts/FavoritesContext';
 const Card = styled.div`
   background: ${props => props.theme.colors.glass.background};
   backdrop-filter: ${props => props.theme.colors.glass.backdrop};
-  border-radius: 20px;
+  border-radius: 0;
   padding: 1.5rem;
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -45,7 +45,7 @@ const FavoriteButton = styled.button<{ $isFavorite: boolean }>`
   right: 1rem;
   background: ${props => props.$isFavorite ? '#e91e63' : 'rgba(255, 255, 255, 0.2)'};
   border: none;
-  border-radius: 50%;
+  border-radius: 0;
   width: 40px;
   height: 40px;
   cursor: pointer;
@@ -67,7 +67,7 @@ const CoverImage = styled.img`
   width: 100%;
   height: 300px;
   object-fit: cover;
-  border-radius: 15px;
+  border-radius: 0;
   margin-bottom: 1rem;
   transition: transform 0.3s ease;
   
@@ -99,7 +99,7 @@ const GenreTag = styled.span`
   background: ${props => props.theme.colors.glass.hover};
   color: ${props => props.theme.colors.text.primary};
   padding: 0.2rem 0.5rem;
-  border-radius: 15px;
+  border-radius: 0;
   font-size: 0.8rem;
 `;
 
@@ -143,7 +143,15 @@ const ManhwaCard: React.FC<ManhwaCardProps> = ({ manhwa }) => {
         onClick={handleFavoriteClick}
         title={isFavorite(manhwa.id) ? 'Remove from favorites' : 'Add to favorites'}
       >
-        {isFavorite(manhwa.id) ? '❤️' : '🤍'}
+        {isFavorite(manhwa.id) ? (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+        ) : (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+        )}
       </FavoriteButton>
       <CoverImage src={coverSrc} alt={manhwa.title} />
       <Title>{manhwa.title}</Title>

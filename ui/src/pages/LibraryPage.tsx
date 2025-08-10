@@ -16,11 +16,11 @@ const Title = styled.h2`
   text-align: center;
   margin-bottom: 2rem;
   font-size: 2.5rem;
-  font-weight: bold;
+  font-weight: 600;
   background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-shadow: 0 0 30px rgba(102, 126, 234, 0.5);
+  background-clip: text;
 `;
 
 const FilterContainer = styled.div`
@@ -31,7 +31,7 @@ const FilterContainer = styled.div`
   padding: 1rem;
   background: ${props => props.theme.colors.glass.background};
   backdrop-filter: ${props => props.theme.colors.glass.backdrop};
-  border-radius: 12px;
+  border-radius: 0;
 `;
 
 const FilterGroup = styled.div`
@@ -48,32 +48,49 @@ const FilterLabel = styled.label`
 `;
 
 const Select = styled.select`
-  padding: 0.5rem;
-  border: none;
-  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0;
   background: ${props => props.theme.colors.glass.hover};
   color: ${props => props.theme.colors.text.primary};
   cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+  font-weight: 500;
+  min-width: 120px;
   
   &:focus {
     outline: none;
+    border-color: #667eea;
+    background: ${props => props.theme.colors.glass.background};
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+  }
+  
+  &:hover {
     background: ${props => props.theme.colors.glass.background};
   }
   
   option {
-    background: ${props => props.theme.colors.glass.background};
+    background: ${props => props.theme.colors.background};
     color: ${props => props.theme.colors.text.primary};
   }
 `;
 
-const SearchInput = styled.input`
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 8px;
-  background: ${props => props.theme.colors.glass.hover};
-  color: ${props => props.theme.colors.text.primary};
+const SearchInputContainer = styled.div`
+  position: relative;
   flex: 1;
   min-width: 200px;
+`;
+
+const SearchInput = styled.input`
+  width: 100%;
+  padding: 0.75rem 2.5rem 0.75rem 1rem;
+  border: none;
+  border-radius: 0;
+  background: ${props => props.theme.colors.glass.hover};
+  color: ${props => props.theme.colors.text.primary};
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
   
   &::placeholder {
     color: ${props => props.theme.colors.text.placeholder};
@@ -82,6 +99,30 @@ const SearchInput = styled.input`
   &:focus {
     outline: none;
     background: ${props => props.theme.colors.glass.background};
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.4);
+  }
+`;
+
+const ClearSearchButton = styled.button`
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: ${props => props.theme.colors.text.secondary};
+  cursor: pointer;
+  padding: 0.25rem;
+  opacity: 0;
+  transition: all 0.3s ease;
+  
+  ${SearchInputContainer}:hover & {
+    opacity: 1;
+  }
+  
+  &:hover {
+    color: ${props => props.theme.colors.text.primary};
   }
 `;
 
@@ -202,12 +243,22 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ favoritesOnly = false }) => {
       <FilterContainer>
         <FilterGroup>
           <FilterLabel>Search</FilterLabel>
-          <SearchInput
-            type="text"
-            placeholder="Search titles, authors, descriptions..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+          <SearchInputContainer>
+            <SearchInput
+              type="text"
+              placeholder="Search titles, authors, descriptions..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            {searchTerm && (
+              <ClearSearchButton onClick={() => setSearchTerm('')}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </ClearSearchButton>
+            )}
+          </SearchInputContainer>
         </FilterGroup>
         
         <FilterGroup>
@@ -248,6 +299,10 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ favoritesOnly = false }) => {
           </Select>
         </FilterGroup>
       </FilterContainer>
+      
+      <div style={{ marginBottom: '1rem', color: 'rgba(255,255,255,0.7)', fontSize: '0.9rem', textAlign: 'center' }}>
+        Showing {filteredAndSortedManhwas.length} of {favoritesOnly ? favorites.length : manhwas.length} manhwa(s)
+      </div>
 
       {filteredAndSortedManhwas.length === 0 ? (
         <NoResultsText>

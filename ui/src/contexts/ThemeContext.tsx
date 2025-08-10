@@ -43,12 +43,12 @@ export const darkTheme: Theme = {
     text: {
       primary: '#ffffff',
       secondary: 'rgba(255, 255, 255, 0.85)',
-      placeholder: 'rgba(255, 255, 255, 0.6)',
+      placeholder: 'rgba(255, 255, 255, 0.5)',
     },
     glass: {
-      background: 'rgba(255, 255, 255, 0.05)',
+      background: 'rgba(255, 255, 255, 0.08)',
       backdrop: 'blur(20px)',
-      hover: 'rgba(255, 255, 255, 0.1)',
+      hover: 'rgba(255, 255, 255, 0.15)',
     },
     shadow: 'rgba(0, 0, 0, 0.8)',
   },

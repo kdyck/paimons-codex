@@ -6,6 +6,10 @@ const Container = styled.div`
   margin: 0 auto;
   padding: 2rem;
   min-height: 100vh;
+  
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
 `;
 
 const Header = styled.div`
@@ -15,6 +19,13 @@ const Header = styled.div`
   margin-bottom: 2rem;
   padding: 2rem 0;
   border-bottom: 1px solid ${props => props.theme.colors.glass.hover};
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem 0;
+    text-align: center;
+  }
 `;
 
 const Title = styled.h1`
@@ -32,7 +43,7 @@ const Button = styled.button`
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
-  border-radius: 12px;
+  border-radius: 0;
   cursor: pointer;
   font-size: 0.9rem;
   font-weight: 600;
@@ -84,15 +95,75 @@ const DeleteButton = styled(Button)`
   }
 `;
 
+const TableContainer = styled.div`
+  @media (max-width: 768px) {
+    display: none;
+  }
+`;
+
 const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
   background: ${props => props.theme.colors.glass.background};
   backdrop-filter: ${props => props.theme.colors.glass.backdrop};
-  border-radius: 20px;
+  border-radius: 0;
   overflow: hidden;
   box-shadow: 0 10px 40px ${props => props.theme.colors.shadow};
   border: 1px solid rgba(255, 255, 255, 0.1);
+`;
+
+const MobileCardContainer = styled.div`
+  display: none;
+  
+  @media (max-width: 768px) {
+    display: block;
+  }
+`;
+
+const MobileCard = styled.div`
+  background: ${props => props.theme.colors.glass.background};
+  backdrop-filter: ${props => props.theme.colors.glass.backdrop};
+  border-radius: 0;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 5px 20px ${props => props.theme.colors.shadow};
+`;
+
+const MobileCardField = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+`;
+
+const MobileFieldLabel = styled.span`
+  color: ${props => props.theme.colors.text.secondary};
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+`;
+
+const MobileFieldValue = styled.span`
+  color: ${props => props.theme.colors.text.primary};
+  font-size: 0.9rem;
+  text-align: right;
+  flex: 1;
+  margin-left: 1rem;
+`;
+
+const MobileActions = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 `;
 
 const Th = styled.th`
@@ -143,11 +214,17 @@ const Modal = styled.div`
 const ModalContent = styled.div`
   background: ${props => props.theme.colors.glass.background};
   padding: 30px;
-  border-radius: 12px;
+  border-radius: 0;
   width: 90%;
   max-width: 600px;
   max-height: 80vh;
   overflow-y: auto;
+  
+  @media (max-width: 768px) {
+    width: 95%;
+    padding: 1.5rem;
+    max-height: 90vh;
+  }
 `;
 
 const Form = styled.form`
@@ -169,34 +246,47 @@ const Label = styled.label`
 `;
 
 const Input = styled.input`
-  padding: 12px;
-  border: 1px solid ${props => props.theme.colors.glass.hover};
-  border-radius: 8px;
-  background: ${props => props.theme.colors.background};
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0;
+  background: ${props => props.theme.colors.glass.hover};
   color: ${props => props.theme.colors.text.primary};
-  font-size: 14px;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
 
   &:focus {
     outline: none;
-    border-color: #4A90E2;
-    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+    border-color: #667eea;
+    background: ${props => props.theme.colors.glass.background};
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.4);
+  }
+  
+  &:hover {
+    background: ${props => props.theme.colors.glass.background};
   }
 `;
 
 const Textarea = styled.textarea`
-  padding: 12px;
-  border: 1px solid ${props => props.theme.colors.glass.hover};
-  border-radius: 8px;
-  background: ${props => props.theme.colors.background};
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0;
+  background: ${props => props.theme.colors.glass.hover};
   color: ${props => props.theme.colors.text.primary};
-  font-size: 14px;
-  min-height: 100px;
+  font-size: 0.9rem;
+  min-height: 120px;
   resize: vertical;
+  transition: all 0.3s ease;
+  font-family: inherit;
 
   &:focus {
     outline: none;
-    border-color: #4A90E2;
-    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+    border-color: #667eea;
+    background: ${props => props.theme.colors.glass.background};
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.4);
+  }
+  
+  &:hover {
+    background: ${props => props.theme.colors.glass.background};
   }
 `;
 
@@ -220,7 +310,7 @@ const CancelButton = styled(Button)`
 const SearchSection = styled.div`
   background: ${props => props.theme.colors.glass.background};
   backdrop-filter: ${props => props.theme.colors.glass.backdrop};
-  border-radius: 16px;
+  border-radius: 0;
   padding: 1.5rem;
   margin-bottom: 2rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -230,15 +320,44 @@ const SearchContainer = styled.div`
   display: flex;
   gap: 1rem;
   align-items: center;
+  justify-content: space-between;
   flex-wrap: wrap;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+`;
+
+const FilterGroup = styled.div`
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+  
+  @media (max-width: 768px) {
+    justify-content: space-between;
+  }
+`;
+
+const SearchInputContainer = styled.div`
+  position: relative;
+  flex: 0 1 33%;
+  min-width: 250px;
+  
+  @media (max-width: 768px) {
+    min-width: auto;
+    width: 100%;
+    flex: 1;
+  }
 `;
 
 const SearchInput = styled.input`
-  flex: 1;
-  min-width: 250px;
-  padding: 0.75rem 1rem;
+  width: 100%;
+  padding: 0.75rem 2.5rem 0.75rem 1rem;
   border: none;
-  border-radius: 12px;
+  border-radius: 0;
   background: ${props => props.theme.colors.glass.hover};
   color: ${props => props.theme.colors.text.primary};
   font-size: 1rem;
@@ -255,24 +374,53 @@ const SearchInput = styled.input`
   }
 `;
 
+const ClearSearchButton = styled.button`
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: ${props => props.theme.colors.text.secondary};
+  cursor: pointer;
+  padding: 0.25rem;
+  opacity: 0;
+  transition: all 0.3s ease;
+  
+  ${SearchInputContainer}:hover & {
+    opacity: 1;
+  }
+  
+  &:hover {
+    color: ${props => props.theme.colors.text.primary};
+  }
+`;
+
 const FilterSelect = styled.select`
   padding: 0.75rem 1rem;
-  border: none;
-  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0;
   background: ${props => props.theme.colors.glass.hover};
   color: ${props => props.theme.colors.text.primary};
   font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.3s ease;
+  font-weight: 500;
+  min-width: 140px;
 
   &:focus {
     outline: none;
+    border-color: #667eea;
     background: ${props => props.theme.colors.glass.background};
-    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+  }
+
+  &:hover {
+    background: ${props => props.theme.colors.glass.background};
   }
 
   option {
-    background: ${props => props.theme.colors.glass.background};
+    background: ${props => props.theme.colors.background};
     color: ${props => props.theme.colors.text.primary};
   }
 `;
@@ -289,7 +437,7 @@ const ErrorMessage = styled.div`
   background: #f8d7da;
   color: #721c24;
   padding: 12px 16px;
-  border-radius: 8px;
+  border-radius: 0;
   margin-bottom: 20px;
 `;
 
@@ -297,7 +445,7 @@ const SuccessMessage = styled.div`
   background: #d4edda;
   color: #155724;
   padding: 12px 16px;
-  border-radius: 8px;
+  border-radius: 0;
   margin-bottom: 20px;
 `;
 
@@ -483,22 +631,34 @@ const AdminPage: React.FC = () => {
 
       <SearchSection>
         <SearchContainer>
-          <SearchInput
-            type="text"
-            placeholder="Search by title, author, genre, or description..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <FilterSelect
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="all">All Status</option>
-            <option value="ongoing">Ongoing</option>
-            <option value="completed">Completed</option>
-            <option value="hiatus">Hiatus</option>
-            <option value="cancelled">Cancelled</option>
-          </FilterSelect>
+          <SearchInputContainer>
+            <SearchInput
+              type="text"
+              placeholder="Search by title, author, genre, or description..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            {searchTerm && (
+              <ClearSearchButton onClick={() => setSearchTerm('')}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </ClearSearchButton>
+            )}
+          </SearchInputContainer>
+          <FilterGroup>
+            <FilterSelect
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="all">All Status</option>
+              <option value="ongoing">Ongoing</option>
+              <option value="completed">Completed</option>
+              <option value="hiatus">Hiatus</option>
+              <option value="cancelled">Cancelled</option>
+            </FilterSelect>
+          </FilterGroup>
         </SearchContainer>
         <div style={{ marginTop: '1rem', color: 'rgba(255,255,255,0.7)', fontSize: '0.9rem' }}>
           Showing {filteredManhwas.length} of {manhwas.length} manhwa(s)
@@ -508,37 +668,72 @@ const AdminPage: React.FC = () => {
       {loading ? (
         <LoadingSpinner>Loading manhwas...</LoadingSpinner>
       ) : (
-        <Table>
-          <thead>
-            <tr>
-              <Th>Title</Th>
-              <Th>Author</Th>
-              <Th>Genre</Th>
-              <Th>Status</Th>
-              <Th>Actions</Th>
-            </tr>
-          </thead>
-          <tbody>
+        <>
+          <TableContainer>
+            <Table>
+              <thead>
+                <tr>
+                  <Th>Title</Th>
+                  <Th>Author</Th>
+                  <Th>Genre</Th>
+                  <Th>Status</Th>
+                  <Th>Actions</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredManhwas.map((manhwa) => (
+                  <Tr key={manhwa.id}>
+                    <Td>{manhwa.title}</Td>
+                    <Td>{manhwa.author}</Td>
+                    <Td>{manhwa.genre.join(', ')}</Td>
+                    <Td style={{ textTransform: 'capitalize' }}>{manhwa.status}</Td>
+                    <Td>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <Button onClick={() => handleEdit(manhwa)} style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}>
+                          Edit
+                        </Button>
+                        <DeleteButton onClick={() => handleDelete(manhwa)} style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}>
+                          Delete
+                        </DeleteButton>
+                      </div>
+                    </Td>
+                  </Tr>
+                ))}
+              </tbody>
+            </Table>
+          </TableContainer>
+          
+          <MobileCardContainer>
             {filteredManhwas.map((manhwa) => (
-              <Tr key={manhwa.id}>
-                <Td>{manhwa.title}</Td>
-                <Td>{manhwa.author}</Td>
-                <Td>{manhwa.genre.join(', ')}</Td>
-                <Td style={{ textTransform: 'capitalize' }}>{manhwa.status}</Td>
-                <Td>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <Button onClick={() => handleEdit(manhwa)} style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}>
-                      Edit
-                    </Button>
-                    <DeleteButton onClick={() => handleDelete(manhwa)} style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}>
-                      Delete
-                    </DeleteButton>
-                  </div>
-                </Td>
-              </Tr>
+              <MobileCard key={manhwa.id}>
+                <MobileCardField>
+                  <MobileFieldLabel>Title</MobileFieldLabel>
+                  <MobileFieldValue>{manhwa.title}</MobileFieldValue>
+                </MobileCardField>
+                <MobileCardField>
+                  <MobileFieldLabel>Author</MobileFieldLabel>
+                  <MobileFieldValue>{manhwa.author}</MobileFieldValue>
+                </MobileCardField>
+                <MobileCardField>
+                  <MobileFieldLabel>Genre</MobileFieldLabel>
+                  <MobileFieldValue>{manhwa.genre.join(', ')}</MobileFieldValue>
+                </MobileCardField>
+                <MobileCardField>
+                  <MobileFieldLabel>Status</MobileFieldLabel>
+                  <MobileFieldValue style={{ textTransform: 'capitalize' }}>{manhwa.status}</MobileFieldValue>
+                </MobileCardField>
+                <MobileActions>
+                  <Button onClick={() => handleEdit(manhwa)} style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}>
+                    Edit
+                  </Button>
+                  <DeleteButton onClick={() => handleDelete(manhwa)} style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}>
+                    Delete
+                  </DeleteButton>
+                </MobileActions>
+              </MobileCard>
             ))}
-          </tbody>
-        </Table>
+          </MobileCardContainer>
+        </>
       )}
 
       {showModal && (
@@ -590,25 +785,17 @@ const AdminPage: React.FC = () => {
 
               <FormGroup>
                 <Label htmlFor="status">Status</Label>
-                <select
+                <FilterSelect
                   id="status"
                   name="status"
                   value={formData.status}
                   onChange={handleInputChange}
-                  style={{
-                    padding: '12px',
-                    border: `1px solid var(--border-color)`,
-                    borderRadius: '8px',
-                    background: 'var(--background-color)',
-                    color: 'var(--text-color)',
-                    fontSize: '14px'
-                  }}
                 >
                   <option value="ongoing">Ongoing</option>
                   <option value="completed">Completed</option>
                   <option value="hiatus">Hiatus</option>
                   <option value="cancelled">Cancelled</option>
-                </select>
+                </FilterSelect>
               </FormGroup>
 
               <FormGroup>
