@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import styled from 'styled-components';
 import { Manhwa } from '../types/manhwa';
 import { manhwaService } from '../services/manhwaService';
+import { useFavorites } from '../contexts/FavoritesContext';
 import ManhwaCard from '../components/ManhwaCard';
 
 const LibraryContainer = styled.div`
@@ -99,13 +100,18 @@ const NoResultsText = styled.p`
   margin-top: 2rem;
 `;
 
-const LibraryPage: React.FC = () => {
+interface LibraryPageProps {
+  favoritesOnly?: boolean;
+}
+
+const LibraryPage: React.FC<LibraryPageProps> = ({ favoritesOnly = false }) => {
   const [manhwas, setManhwas] = useState<Manhwa[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGenre, setSelectedGenre] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [sortBy, setSortBy] = useState('title');
+  const { favorites } = useFavorites();
 
   useEffect(() => {
     const fetchManhwas = async () => {
@@ -139,8 +145,12 @@ const LibraryPage: React.FC = () => {
     console.log('LibraryPage: Search term:', searchTerm);
     console.log('LibraryPage: Selected genre:', selectedGenre);
     console.log('LibraryPage: Selected status:', selectedStatus);
+    console.log('LibraryPage: Favorites only mode:', favoritesOnly);
     
-    let filtered = manhwas.filter(manhwa => {
+    // Use favorites data if in favorites mode, otherwise use all manhwas
+    const sourceData = favoritesOnly ? favorites : manhwas;
+    
+    let filtered = sourceData.filter(manhwa => {
       const matchesSearch = manhwa.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            manhwa.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            manhwa.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -168,7 +178,7 @@ const LibraryPage: React.FC = () => {
 
     console.log('LibraryPage: Filtered results:', filtered);
     return filtered;
-  }, [manhwas, searchTerm, selectedGenre, selectedStatus, sortBy]);
+  }, [manhwas, searchTerm, selectedGenre, selectedStatus, sortBy, favoritesOnly, favorites]);
 
   if (loading) {
     return (
@@ -182,7 +192,7 @@ const LibraryPage: React.FC = () => {
 
   return (
     <LibraryContainer>
-      <Title>Library</Title>
+      <Title>{favoritesOnly ? 'My Favorites' : 'Library'}</Title>
       
       <FilterContainer>
         <FilterGroup>

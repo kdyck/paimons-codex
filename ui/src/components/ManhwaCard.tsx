@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { Manhwa } from '../types/manhwa';
 import { toMinioUrl, coverUrlFromSlug } from '../services/minio';
+import { useFavorites } from '../contexts/FavoritesContext';
 
 const Card = styled.div`
   background: ${props => props.theme.colors.glass.background};
@@ -11,11 +12,36 @@ const Card = styled.div`
   padding: 1.5rem;
   cursor: pointer;
   transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+  position: relative;
   
   &:hover {
     transform: translateY(-5px);
     box-shadow: 0 10px 30px ${props => props.theme.colors.shadow};
     background: ${props => props.theme.colors.glass.hover};
+  }
+`;
+
+const FavoriteButton = styled.button<{ $isFavorite: boolean }>`
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: ${props => props.$isFavorite ? '#e91e63' : 'rgba(255, 255, 255, 0.2)'};
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: white;
+  transition: all 0.3s ease;
+  z-index: 2;
+
+  &:hover {
+    transform: scale(1.1);
+    background: ${props => props.$isFavorite ? '#c2185b' : 'rgba(255, 255, 255, 0.3)'};
   }
 `;
 
@@ -71,9 +97,15 @@ interface ManhwaCardProps {
 
 const ManhwaCard: React.FC<ManhwaCardProps> = ({ manhwa }) => {
   const navigate = useNavigate();
+  const { isFavorite, toggleFavorite } = useFavorites();
 
   const handleClick = () => {
     navigate(`/manhwa/${manhwa.id}`);
+  };
+
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click when clicking favorite button
+    toggleFavorite(manhwa);
   };
 
   const slug = manhwa.slug || manhwa.id;
@@ -83,6 +115,13 @@ const ManhwaCard: React.FC<ManhwaCardProps> = ({ manhwa }) => {
 
   return (
     <Card onClick={handleClick}>
+      <FavoriteButton
+        $isFavorite={isFavorite(manhwa.id)}
+        onClick={handleFavoriteClick}
+        title={isFavorite(manhwa.id) ? 'Remove from favorites' : 'Add to favorites'}
+      >
+        {isFavorite(manhwa.id) ? '❤️' : '🤍'}
+      </FavoriteButton>
       <CoverImage src={coverSrc} alt={manhwa.title} />
       <Title>{manhwa.title}</Title>
       <Author>by {manhwa.author}</Author>

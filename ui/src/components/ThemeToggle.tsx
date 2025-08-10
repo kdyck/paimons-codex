@@ -37,37 +37,21 @@ const ToggleSlider = styled.div<{ $isDark: boolean }>`
 `;
 
 const ThemeToggle: React.FC = () => {
-  try {
-    const { isDark, toggleTheme } = useTheme();
-    console.log('ThemeToggle rendering, isDark:', isDark);
+  const { isDark, toggleTheme } = useTheme();
+  
+  console.log('ThemeToggle rendering, isDark:', isDark);
 
-    return (
-      <ToggleContainer 
-        $isDark={isDark} 
-        onClick={toggleTheme} 
-        title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
-      >
-        <ToggleSlider $isDark={isDark}>
-          {isDark ? '🌙' : '☀️'}
-        </ToggleSlider>
-      </ToggleContainer>
-    );
-  } catch (error) {
-    console.error('ThemeToggle error:', error);
-    // Fallback toggle without theme context
-    return (
-      <ToggleContainer 
-        $isDark={false} 
-        onClick={() => console.log('Theme toggle clicked')} 
-        title="Theme Toggle (Error)"
-        style={{ border: '2px solid red' }}
-      >
-        <ToggleSlider $isDark={false}>
-          ⚠️
-        </ToggleSlider>
-      </ToggleContainer>
-    );
-  }
+  return (
+    <ToggleContainer 
+      $isDark={isDark} 
+      onClick={toggleTheme} 
+      title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+    >
+      <ToggleSlider $isDark={isDark}>
+        {isDark ? '🌙' : '☀️'}
+      </ToggleSlider>
+    </ToggleContainer>
+  );
 };
 
 export default ThemeToggle;

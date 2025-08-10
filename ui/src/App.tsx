@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import styled, { ThemeProvider as StyledThemeProvider } from 'styled-components';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
+import { FavoritesProvider } from './contexts/FavoritesContext';
 import HomePage from './pages/HomePage';
 import LibraryPage from './pages/LibraryPage';
 import AdminPage from './pages/AdminPage';
@@ -25,6 +26,7 @@ const AppContent: React.FC = () => {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/library" element={<LibraryPage />} />
+            <Route path="/favorites" element={<LibraryPage favoritesOnly />} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/manhwa/:id" element={<ManhwaDetailPage />} />
           </Routes>
@@ -37,7 +39,9 @@ const AppContent: React.FC = () => {
 const App: React.FC = () => {
   return (
     <ThemeProvider>
-      <AppContent />
+      <FavoritesProvider>
+        <AppContent />
+      </FavoritesProvider>
     </ThemeProvider>
   );
 };

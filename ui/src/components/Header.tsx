@@ -120,6 +120,9 @@ const Header: React.FC = () => {
         <NavLink onClick={() => navigate('/library')}>
           Library
         </NavLink>
+        <NavLink onClick={() => navigate('/favorites')}>
+          Favorites
+        </NavLink>
         <NavLink onClick={() => navigate('/admin')}>
           Admin
         </NavLink>
