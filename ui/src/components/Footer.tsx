@@ -74,7 +74,7 @@ const SocialLinks = styled.div`
 const SocialIcon = styled.a`
   background: ${props => props.theme.colors.glass.background};
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 0;
+  border-radius: 50%;
   width: 40px;
   height: 40px;
   display: flex;

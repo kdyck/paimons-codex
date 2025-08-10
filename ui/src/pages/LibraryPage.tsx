@@ -16,11 +16,10 @@ const Title = styled.h2`
   text-align: center;
   margin-bottom: 2rem;
   font-size: 2.5rem;
-  font-weight: 600;
+  font-weight: bold;
   background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  background-clip: text;
 `;
 
 const FilterContainer = styled.div`
@@ -31,7 +30,7 @@ const FilterContainer = styled.div`
   padding: 1rem;
   background: ${props => props.theme.colors.glass.background};
   backdrop-filter: ${props => props.theme.colors.glass.backdrop};
-  border-radius: 0;
+  border-radius: 12px;
 `;
 
 const FilterGroup = styled.div`
@@ -50,7 +49,7 @@ const FilterLabel = styled.label`
 const Select = styled.select`
   padding: 0.75rem 1rem;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 0;
+  border-radius: 8px;
   background: ${props => props.theme.colors.glass.hover};
   color: ${props => props.theme.colors.text.primary};
   cursor: pointer;
@@ -86,7 +85,7 @@ const SearchInput = styled.input`
   width: 100%;
   padding: 0.75rem 2.5rem 0.75rem 1rem;
   border: none;
-  border-radius: 0;
+  border-radius: 12px;
   background: ${props => props.theme.colors.glass.hover};
   color: ${props => props.theme.colors.text.primary};
   border: 1px solid rgba(255, 255, 255, 0.2);

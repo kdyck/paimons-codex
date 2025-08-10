@@ -99,7 +99,7 @@ const NavLink = styled.button`
   font-size: 0.9rem;
   cursor: pointer;
   padding: 0.5rem 1rem;
-  border-radius: 0;
+  border-radius: 8px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -190,7 +190,7 @@ const MobileTopLeft = styled.div`
 const ProfileIcon = styled.button`
   background: ${props => props.theme.colors.glass.background};
   border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 0;
+  border-radius: 50%;
   width: 40px;
   height: 40px;
   display: flex;
@@ -211,7 +211,7 @@ const ProfileIcon = styled.button`
 const SearchSection = styled.div`
   background: ${props => props.theme.colors.glass.background};
   backdrop-filter: ${props => props.theme.colors.glass.backdrop};
-  border-radius: 0;
+  border-radius: 16px;
   padding: 1rem;
   border: 1px solid rgba(255, 255, 255, 0.15);
   
@@ -259,7 +259,7 @@ const SearchInput = styled.input`
   width: 100%;
   padding: 0.75rem 2.5rem 0.75rem 1rem;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 0;
+  border-radius: 12px;
   background: ${props => props.theme.colors.glass.hover};
   color: ${props => props.theme.colors.text.primary};
   font-size: 0.9rem;
@@ -280,7 +280,7 @@ const SearchInput = styled.input`
 const SearchButton = styled.button`
   padding: 0.5rem 1rem;
   border: none;
-  border-radius: 0;
+  border-radius: 12px;
   background: linear-gradient(135deg, #667eea, #764ba2);
   color: white;
   cursor: pointer;

@@ -7,6 +7,7 @@ import HomePage from './pages/HomePage';
 import LibraryPage from './pages/LibraryPage';
 import AdminPage from './pages/AdminPage';
 import ManhwaDetailPage from './pages/ManhwaDetailPage';
+import ReaderPage from './pages/ReaderPage';
 import Header from './components/Header';
 import Footer from './components/Footer';
 
@@ -37,6 +38,7 @@ const AppContent: React.FC = () => {
               <Route path="/favorites" element={<LibraryPage favoritesOnly />} />
               <Route path="/admin" element={<AdminPage />} />
               <Route path="/manhwa/:id" element={<ManhwaDetailPage />} />
+              <Route path="/reader/:manhwaId/:chapterId" element={<ReaderPage />} />
             </Routes>
           </MainContent>
           <Footer />

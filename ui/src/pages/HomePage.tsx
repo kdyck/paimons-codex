@@ -12,14 +12,14 @@ const HomeContainer = styled.div`
 
 const Title = styled.h2`
   color: ${props => props.theme.colors.text.primary};
-  text-align: center;
-  margin-bottom: 2rem;
+  margin: 0;
   font-size: 2.5rem;
   font-weight: bold;
   background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-shadow: 0 0 30px rgba(102, 126, 234, 0.5);
+  text-align: center;
+  margin-bottom: 2rem;
 `;
 
 const ManhwaGrid = styled.div`

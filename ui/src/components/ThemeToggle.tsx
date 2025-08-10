@@ -6,7 +6,7 @@ const ToggleContainer = styled.button<{ $isDark: boolean }>`
   background: ${props => props.$isDark ? 'rgba(30, 41, 59, 0.6)' : 'rgba(255, 255, 255, 0.2)'};
   backdrop-filter: blur(15px);
   border: 2px solid ${props => props.$isDark ? 'rgba(248, 250, 252, 0.3)' : 'rgba(251, 191, 36, 0.6)'};
-  border-radius: 0;
+  border-radius: 50px;
   padding: 0.3rem;
   width: 70px;
   height: 36px;
@@ -30,7 +30,7 @@ const ToggleSlider = styled.div<{ $isDark: boolean }>`
     'linear-gradient(45deg, #fbbf24, #f59e0b)'};
   width: 28px;
   height: 28px;
-  border-radius: 0;
+  border-radius: 50%;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   transform: translateX(${props => props.$isDark ? '30px' : '2px'});
   display: flex;

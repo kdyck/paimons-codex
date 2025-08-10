@@ -43,7 +43,7 @@ const Button = styled.button`
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
-  border-radius: 0;
+  border-radius: 12px;
   cursor: pointer;
   font-size: 0.9rem;
   font-weight: 600;
@@ -106,7 +106,7 @@ const Table = styled.table`
   border-collapse: collapse;
   background: ${props => props.theme.colors.glass.background};
   backdrop-filter: ${props => props.theme.colors.glass.backdrop};
-  border-radius: 0;
+  border-radius: 20px;
   overflow: hidden;
   box-shadow: 0 10px 40px ${props => props.theme.colors.shadow};
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -123,7 +123,7 @@ const MobileCardContainer = styled.div`
 const MobileCard = styled.div`
   background: ${props => props.theme.colors.glass.background};
   backdrop-filter: ${props => props.theme.colors.glass.backdrop};
-  border-radius: 0;
+  border-radius: 15px;
   padding: 1.5rem;
   margin-bottom: 1rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -204,7 +204,7 @@ const Modal = styled.div`
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 1, 1);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -214,7 +214,7 @@ const Modal = styled.div`
 const ModalContent = styled.div`
   background: ${props => props.theme.colors.glass.background};
   padding: 30px;
-  border-radius: 0;
+  border-radius: 12px;
   width: 90%;
   max-width: 600px;
   max-height: 80vh;
@@ -248,7 +248,7 @@ const Label = styled.label`
 const Input = styled.input`
   padding: 0.75rem 1rem;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 0;
+  border-radius: 8px;
   background: ${props => props.theme.colors.glass.hover};
   color: ${props => props.theme.colors.text.primary};
   font-size: 0.9rem;
@@ -269,7 +269,7 @@ const Input = styled.input`
 const Textarea = styled.textarea`
   padding: 0.75rem 1rem;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 0;
+  border-radius: 8px;
   background: ${props => props.theme.colors.glass.hover};
   color: ${props => props.theme.colors.text.primary};
   font-size: 0.9rem;
@@ -310,7 +310,7 @@ const CancelButton = styled(Button)`
 const SearchSection = styled.div`
   background: ${props => props.theme.colors.glass.background};
   backdrop-filter: ${props => props.theme.colors.glass.backdrop};
-  border-radius: 0;
+  border-radius: 16px;
   padding: 1.5rem;
   margin-bottom: 2rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -357,7 +357,7 @@ const SearchInput = styled.input`
   width: 100%;
   padding: 0.75rem 2.5rem 0.75rem 1rem;
   border: none;
-  border-radius: 0;
+  border-radius: 12px;
   background: ${props => props.theme.colors.glass.hover};
   color: ${props => props.theme.colors.text.primary};
   font-size: 1rem;
@@ -399,7 +399,7 @@ const ClearSearchButton = styled.button`
 const FilterSelect = styled.select`
   padding: 0.75rem 1rem;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 0;
+  border-radius: 8px;
   background: ${props => props.theme.colors.glass.hover};
   color: ${props => props.theme.colors.text.primary};
   font-size: 0.9rem;
@@ -437,7 +437,7 @@ const ErrorMessage = styled.div`
   background: #f8d7da;
   color: #721c24;
   padding: 12px 16px;
-  border-radius: 0;
+  border-radius: 12px;
   margin-bottom: 20px;
 `;
 
@@ -445,7 +445,7 @@ const SuccessMessage = styled.div`
   background: #d4edda;
   color: #155724;
   padding: 12px 16px;
-  border-radius: 0;
+  border-radius: 12px;
   margin-bottom: 20px;
 `;
 
