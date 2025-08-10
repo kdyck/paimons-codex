@@ -16,6 +16,11 @@ const Title = styled.h2`
   text-align: center;
   margin-bottom: 2rem;
   font-size: 2.5rem;
+  font-weight: bold;
+  background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 30px rgba(102, 126, 234, 0.5);
 `;
 
 const FilterContainer = styled.div`

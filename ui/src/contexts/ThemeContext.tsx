@@ -21,36 +21,36 @@ export interface Theme {
 export const lightTheme: Theme = {
   colors: {
     background: '#f8fafc',
-    backgroundGradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    backgroundGradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
     text: {
       primary: '#ffffff',
-      secondary: 'rgba(255, 255, 255, 0.8)',
+      secondary: 'rgba(255, 255, 255, 0.85)',
       placeholder: 'rgba(255, 255, 255, 0.7)',
     },
     glass: {
-      background: 'rgba(255, 255, 255, 0.1)',
-      backdrop: 'blur(10px)',
-      hover: 'rgba(255, 255, 255, 0.2)',
+      background: 'rgba(255, 255, 255, 0.15)',
+      backdrop: 'blur(20px)',
+      hover: 'rgba(255, 255, 255, 0.25)',
     },
-    shadow: 'rgba(0, 0, 0, 0.3)',
+    shadow: 'rgba(0, 0, 0, 0.2)',
   },
 };
 
 export const darkTheme: Theme = {
   colors: {
     background: '#0f172a',
-    backgroundGradient: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
+    backgroundGradient: 'linear-gradient(135deg, #1e293b 0%, #334155 50%, #1f2937 100%)',
     text: {
-      primary: '#f1f5f9',
-      secondary: 'rgba(241, 245, 249, 0.8)',
-      placeholder: 'rgba(241, 245, 249, 0.6)',
+      primary: '#f8fafc',
+      secondary: 'rgba(248, 250, 252, 0.85)',
+      placeholder: 'rgba(248, 250, 252, 0.6)',
     },
     glass: {
-      background: 'rgba(15, 23, 42, 0.3)',
-      backdrop: 'blur(10px)',
-      hover: 'rgba(15, 23, 42, 0.5)',
+      background: 'rgba(30, 41, 59, 0.4)',
+      backdrop: 'blur(20px)',
+      hover: 'rgba(30, 41, 59, 0.6)',
     },
-    shadow: 'rgba(0, 0, 0, 0.6)',
+    shadow: 'rgba(0, 0, 0, 0.5)',
   },
 };
 

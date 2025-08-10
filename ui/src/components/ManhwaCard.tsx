@@ -8,16 +8,34 @@ import { useFavorites } from '../contexts/FavoritesContext';
 const Card = styled.div`
   background: ${props => props.theme.colors.glass.background};
   backdrop-filter: ${props => props.theme.colors.glass.backdrop};
-  border-radius: 15px;
+  border-radius: 20px;
   padding: 1.5rem;
   cursor: pointer;
-  transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.5s ease;
+  }
   
   &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 30px ${props => props.theme.colors.shadow};
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 40px ${props => props.theme.colors.shadow};
     background: ${props => props.theme.colors.glass.hover};
+    border-color: rgba(255, 255, 255, 0.2);
+    
+    &::before {
+      left: 100%;
+    }
   }
 `;
 
@@ -49,8 +67,13 @@ const CoverImage = styled.img`
   width: 100%;
   height: 300px;
   object-fit: cover;
-  border-radius: 10px;
+  border-radius: 15px;
   margin-bottom: 1rem;
+  transition: transform 0.3s ease;
+  
+  ${Card}:hover & {
+    transform: scale(1.05);
+  }
 `;
 
 const Title = styled.h3`

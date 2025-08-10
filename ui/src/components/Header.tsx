@@ -10,6 +10,10 @@ const HeaderContainer = styled.header`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 `;
 
 const Logo = styled.h1`
@@ -18,6 +22,22 @@ const Logo = styled.h1`
   cursor: pointer;
   font-size: 1.8rem;
   font-weight: bold;
+  transition: all 0.3s ease;
+  background: linear-gradient(45deg, #f093fb, #f5576c, #4facfe, #00f2fe);
+  background-size: 400% 400%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient 3s ease infinite;
+  
+  @keyframes gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  
+  &:hover {
+    transform: scale(1.05);
+  }
 `;
 
 const Navigation = styled.nav`
@@ -33,11 +53,30 @@ const NavLink = styled.button`
   font-size: 1rem;
   cursor: pointer;
   padding: 0.5rem 1rem;
-  border-radius: 8px;
-  transition: all 0.3s ease;
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: ${props => props.theme.colors.glass.hover};
+    transition: left 0.3s ease;
+    z-index: -1;
+  }
   
   &:hover {
     background: ${props => props.theme.colors.glass.hover};
+    transform: translateY(-1px);
+    
+    &::before {
+      left: 0;
+    }
   }
   
   &.active {
