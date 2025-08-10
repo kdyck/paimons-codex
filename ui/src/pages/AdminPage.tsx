@@ -2,55 +2,85 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 
 const Container = styled.div`
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 2rem;
+  min-height: 100vh;
 `;
 
 const Header = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
-  padding: 20px 0;
+  margin-bottom: 2rem;
+  padding: 2rem 0;
   border-bottom: 1px solid ${props => props.theme.colors.glass.hover};
 `;
 
 const Title = styled.h1`
   color: ${props => props.theme.colors.text.primary};
   margin: 0;
+  font-size: 2.5rem;
+  font-weight: bold;
+  background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 `;
 
 const Button = styled.button`
-  background: #4A90E2;
+  background: linear-gradient(135deg, #667eea, #764ba2);
   color: white;
   border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+  }
 
   &:hover {
-    background: #357ABD;
-    transform: translateY(-1px);
+    background: linear-gradient(135deg, #764ba2, #f093fb);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    
+    &::before {
+      left: 100%;
+    }
   }
 
   &:disabled {
-    background: ${props => props.theme.colors.text.secondary};
+    background: ${props => props.theme.colors.glass.hover};
     cursor: not-allowed;
     transform: none;
+    box-shadow: none;
   }
 `;
 
 const DeleteButton = styled(Button)`
-  background: #dc3545;
-  padding: 8px 16px;
-  font-size: 12px;
+  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
 
   &:hover {
-    background: #c82333;
+    background: linear-gradient(135deg, #ee5a52, #ff4757);
+    box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
   }
 `;
 
@@ -58,29 +88,42 @@ const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
   background: ${props => props.theme.colors.glass.background};
-  border-radius: 12px;
+  backdrop-filter: ${props => props.theme.colors.glass.backdrop};
+  border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 40px ${props => props.theme.colors.shadow};
+  border: 1px solid rgba(255, 255, 255, 0.1);
 `;
 
 const Th = styled.th`
-  background: ${props => props.theme.colors.background};
+  background: ${props => props.theme.colors.glass.hover};
   color: ${props => props.theme.colors.text.primary};
-  padding: 16px;
+  padding: 1.2rem 1.5rem;
   text-align: left;
-  font-weight: 600;
-  border-bottom: 2px solid ${props => props.theme.colors.glass.hover};
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
 `;
 
 const Td = styled.td`
-  padding: 16px;
-  border-bottom: 1px solid ${props => props.theme.colors.glass.hover};
+  padding: 1.2rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   color: ${props => props.theme.colors.text.primary};
+  font-size: 0.95rem;
 `;
 
 const Tr = styled.tr`
+  transition: all 0.3s ease;
+  
   &:hover {
-    background: ${props => props.theme.colors.background};
+    background: ${props => props.theme.colors.glass.hover};
+    transform: scale(1.005);
+  }
+  
+  &:last-child td {
+    border-bottom: none;
   }
 `;
 
@@ -165,10 +208,72 @@ const ButtonGroup = styled.div`
 `;
 
 const CancelButton = styled(Button)`
-  background: ${props => props.theme.colors.text.secondary};
+  background: ${props => props.theme.colors.glass.background};
+  color: ${props => props.theme.colors.text.primary};
+  box-shadow: 0 4px 15px ${props => props.theme.colors.shadow};
 
   &:hover {
-    background: ${props => props.theme.colors.text.primary};
+    background: ${props => props.theme.colors.glass.hover};
+  }
+`;
+
+const SearchSection = styled.div`
+  background: ${props => props.theme.colors.glass.background};
+  backdrop-filter: ${props => props.theme.colors.glass.backdrop};
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+`;
+
+const SearchContainer = styled.div`
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+`;
+
+const SearchInput = styled.input`
+  flex: 1;
+  min-width: 250px;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 12px;
+  background: ${props => props.theme.colors.glass.hover};
+  color: ${props => props.theme.colors.text.primary};
+  font-size: 1rem;
+  transition: all 0.3s ease;
+
+  &::placeholder {
+    color: ${props => props.theme.colors.text.placeholder};
+  }
+
+  &:focus {
+    outline: none;
+    background: ${props => props.theme.colors.glass.background};
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.3);
+  }
+`;
+
+const FilterSelect = styled.select`
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 12px;
+  background: ${props => props.theme.colors.glass.hover};
+  color: ${props => props.theme.colors.text.primary};
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:focus {
+    outline: none;
+    background: ${props => props.theme.colors.glass.background};
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.3);
+  }
+
+  option {
+    background: ${props => props.theme.colors.glass.background};
+    color: ${props => props.theme.colors.text.primary};
   }
 `;
 
@@ -208,11 +313,14 @@ interface Manhwa {
 
 const AdminPage: React.FC = () => {
   const [manhwas, setManhwas] = useState<Manhwa[]>([]);
+  const [filteredManhwas, setFilteredManhwas] = useState<Manhwa[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingManhwa, setEditingManhwa] = useState<Manhwa | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   const [formData, setFormData] = useState({
     title: '',
@@ -226,6 +334,26 @@ const AdminPage: React.FC = () => {
   useEffect(() => {
     fetchManhwas();
   }, []);
+
+  useEffect(() => {
+    filterManhwas();
+  }, [manhwas, searchTerm, statusFilter]);
+
+  const filterManhwas = () => {
+    let filtered = manhwas.filter(manhwa => {
+      const matchesSearch = searchTerm === '' || 
+        manhwa.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        manhwa.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        manhwa.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        manhwa.genre.some(g => g.toLowerCase().includes(searchTerm.toLowerCase()));
+      
+      const matchesStatus = statusFilter === 'all' || manhwa.status === statusFilter;
+      
+      return matchesSearch && matchesStatus;
+    });
+    
+    setFilteredManhwas(filtered);
+  };
 
   const fetchManhwas = async () => {
     try {
@@ -353,6 +481,30 @@ const AdminPage: React.FC = () => {
       {error && <ErrorMessage>{error}</ErrorMessage>}
       {success && <SuccessMessage>{success}</SuccessMessage>}
 
+      <SearchSection>
+        <SearchContainer>
+          <SearchInput
+            type="text"
+            placeholder="Search by title, author, genre, or description..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <FilterSelect
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="all">All Status</option>
+            <option value="ongoing">Ongoing</option>
+            <option value="completed">Completed</option>
+            <option value="hiatus">Hiatus</option>
+            <option value="cancelled">Cancelled</option>
+          </FilterSelect>
+        </SearchContainer>
+        <div style={{ marginTop: '1rem', color: 'rgba(255,255,255,0.7)', fontSize: '0.9rem' }}>
+          Showing {filteredManhwas.length} of {manhwas.length} manhwa(s)
+        </div>
+      </SearchSection>
+
       {loading ? (
         <LoadingSpinner>Loading manhwas...</LoadingSpinner>
       ) : (
@@ -367,19 +519,21 @@ const AdminPage: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {manhwas.map((manhwa) => (
+            {filteredManhwas.map((manhwa) => (
               <Tr key={manhwa.id}>
                 <Td>{manhwa.title}</Td>
                 <Td>{manhwa.author}</Td>
                 <Td>{manhwa.genre.join(', ')}</Td>
                 <Td style={{ textTransform: 'capitalize' }}>{manhwa.status}</Td>
                 <Td>
-                  <Button onClick={() => handleEdit(manhwa)} style={{ marginRight: '8px' }}>
-                    Edit
-                  </Button>
-                  <DeleteButton onClick={() => handleDelete(manhwa)}>
-                    Delete
-                  </DeleteButton>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <Button onClick={() => handleEdit(manhwa)} style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}>
+                      Edit
+                    </Button>
+                    <DeleteButton onClick={() => handleDelete(manhwa)} style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}>
+                      Delete
+                    </DeleteButton>
+                  </div>
                 </Td>
               </Tr>
             ))}

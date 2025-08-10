@@ -100,9 +100,11 @@ const SearchContainer = styled.div`
 const SearchInput = styled.input`
   padding: 0.5rem 1rem;
   border: none;
-  border-radius: 25px;
+  border-radius: 12px;
   background: ${props => props.theme.colors.glass.background};
   color: ${props => props.theme.colors.text.primary};
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   
   &::placeholder {
     color: ${props => props.theme.colors.text.placeholder};
@@ -111,21 +113,29 @@ const SearchInput = styled.input`
   &:focus {
     outline: none;
     background: ${props => props.theme.colors.glass.hover};
+    border-color: rgba(102, 126, 234, 0.5);
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
   }
 `;
 
 const SearchButton = styled.button`
   padding: 0.5rem 1rem;
   border: none;
-  border-radius: 25px;
-  background: ${props => props.theme.colors.glass.hover};
-  color: ${props => props.theme.colors.text.primary};
+  border-radius: 12px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
   cursor: pointer;
-  transition: background 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
   
   &:hover {
-    background: ${props => props.theme.colors.glass.hover};
-    opacity: 0.8;
+    background: linear-gradient(135deg, #764ba2, #f093fb);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
   }
 `;
 

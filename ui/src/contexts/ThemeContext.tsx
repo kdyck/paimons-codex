@@ -38,19 +38,19 @@ export const lightTheme: Theme = {
 
 export const darkTheme: Theme = {
   colors: {
-    background: '#0f172a',
-    backgroundGradient: 'linear-gradient(135deg, #1e293b 0%, #334155 50%, #1f2937 100%)',
+    background: '#000000',
+    backgroundGradient: 'linear-gradient(135deg, #111111 0%, #1a1a1a 50%, #0a0a0a 100%)',
     text: {
-      primary: '#f8fafc',
-      secondary: 'rgba(248, 250, 252, 0.85)',
-      placeholder: 'rgba(248, 250, 252, 0.6)',
+      primary: '#ffffff',
+      secondary: 'rgba(255, 255, 255, 0.85)',
+      placeholder: 'rgba(255, 255, 255, 0.6)',
     },
     glass: {
-      background: 'rgba(30, 41, 59, 0.4)',
+      background: 'rgba(255, 255, 255, 0.05)',
       backdrop: 'blur(20px)',
-      hover: 'rgba(30, 41, 59, 0.6)',
+      hover: 'rgba(255, 255, 255, 0.1)',
     },
-    shadow: 'rgba(0, 0, 0, 0.5)',
+    shadow: 'rgba(0, 0, 0, 0.8)',
   },
 };
 
