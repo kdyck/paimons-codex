@@ -63,7 +63,7 @@ if [ -z "$TARGET_SERVICES" ]; then
     podman-compose up --build -d
 else
     echo "🏗️  Building and starting services: $TARGET_SERVICES"
-    podman-compose up --build -d $TARGET_SERVICES
+    podman-compose up --build -d "$TARGET_SERVICES"
 fi
 
 # Wait for services to be healthy
@@ -78,13 +78,17 @@ podman-compose ps
 echo "📋 API Service Logs:"
 podman-compose logs --tail=20 api
 
+# Initialize MinIO bucket and permissions
+echo ""
+echo "🪣 Initializing MinIO bucket..."
+./scripts/init-minio-bucket.sh
+
 echo ""
 echo "✅ Paimon's Codex is now running!"
 echo ""
 echo "🌐 Frontend: http://localhost:3000"
 echo "🔧 API: http://localhost:8000"
 echo "📊 API Docs: http://localhost:8000/docs"
-echo "🗄️  Oracle EM: http://localhost:5500/em"
 echo "🗂️  MinIO Console: http://localhost:9001 (paimons/paimons123)"
 echo "📦 MinIO API: http://localhost:9000"
 echo ""

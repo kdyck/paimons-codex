@@ -1,13 +1,16 @@
-FROM python:3.11-slim
+FROM oraclelinux:9-slim
 
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
+# Install Python 3.11 and system dependencies using microdnf
+RUN microdnf update -y && \
+    microdnf install -y \
+    python3.11 \
+    python3.11-pip \
     wget \
     unzip \
-    libaio1 \
-    && rm -rf /var/lib/apt/lists/*
+    libaio \
+    && microdnf clean all
 
 # Install Oracle Instant Client
 RUN mkdir -p /opt/oracle \
@@ -24,7 +27,7 @@ ENV PATH=/opt/oracle/instantclient_21_13:$PATH
 
 # Copy requirements and install Python dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN python3.11 -m pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY . .
@@ -34,4 +37,4 @@ COPY . .
 EXPOSE 8000
 
 # Command to run the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python3.11", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

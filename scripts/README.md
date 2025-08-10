@@ -25,7 +25,7 @@ Start all or specific services in the development environment.
 - `ui` - React frontend service  
 - `oracle-db` - Oracle 23ai database with vector search
 - `caddy` - Caddy reverse proxy
-- `minio` - MinIO object storage
+- `minio` - MinIO object storage (auto-configured on startup)
 
 ### 🛑 `stop.sh` - Stop Services
 Stop all or specific services.
@@ -83,6 +83,25 @@ Stop development mode services.
 ./scripts/stop-dev.sh
 ```
 
+### 🪣 `init-minio-bucket.sh` - Initialize MinIO Bucket
+Creates the MinIO bucket and sets public read permissions. Run this once after starting MinIO or when bucket permissions are reset.
+
+```bash
+./scripts/init-minio-bucket.sh
+```
+
+### 📤 `upload-manhwa-assets.sh` - Upload Manhwa Assets
+Upload specific manhwa assets to MinIO bucket. Cleaner interface than calling the Python script directly.
+
+```bash
+# Upload specific manhwa
+./scripts/upload-manhwa-assets.sh no-more-princes
+./scripts/upload-manhwa-assets.sh solo-leveling
+
+# Get usage help
+./scripts/upload-manhwa-assets.sh
+```
+
 ## Common Workflows
 
 ### Full Development Setup
@@ -90,6 +109,12 @@ Stop development mode services.
 # Initial setup
 ./scripts/podman-setup.sh
 ./scripts/start.sh
+
+# Initialize MinIO bucket
+./scripts/init-minio-bucket.sh
+
+# Upload manhwa assets
+./scripts/upload-manhwa-assets.sh no-more-princes
 
 # Seed database (optional)
 python scripts/seed-data.py
@@ -117,6 +142,13 @@ python scripts/seed-data.py
 ```bash
 # Start MinIO and API for image management
 ./scripts/start.sh minio api
+
+# Initialize bucket and upload assets
+./scripts/init-minio-bucket.sh
+./scripts/upload-manhwa-assets.sh no-more-princes
+
+# Access MinIO console at http://localhost:9001 (paimons/paimons123)
+# MinIO API available at http://localhost:9000
 
 # When done
 ./scripts/stop.sh minio api
@@ -146,7 +178,7 @@ When starting specific services, be aware of dependencies:
 
 - **UI** depends on **API**
 - **API** depends on **Oracle DB** (with embedded vector search)
-- **API** can optionally use **MinIO** for image storage
+- **API** uses **MinIO** for image storage (auto-configured by start.sh)
 - **Caddy** proxies to **UI** and **API**
 
 For most development work:
@@ -203,6 +235,30 @@ PODMAN_COMPOSE_DEBUG=1 ./scripts/start.sh
 
 ### Custom Configuration
 Edit `docker-compose.yml` to modify service configurations before running scripts.
+
+### MinIO Object Storage Setup
+
+**Automated Setup (recommended):**
+```bash
+# Initialize bucket and permissions
+./scripts/init-minio-bucket.sh
+
+# Upload manhwa assets
+./scripts/upload-manhwa-assets.sh <manhwa-name>
+```
+
+**Manual MinIO Setup (if needed):**
+```bash
+# Individual MinIO commands:
+podman exec paimons-minio mc alias set local http://localhost:9000 paimons paimons123
+podman exec paimons-minio mc mb local/codex  # Create bucket
+podman exec paimons-minio mc anonymous set public local/codex  # Set permissions
+podman exec paimons-minio mc anonymous get local/codex  # Verify
+podman exec paimons-minio mc ls local/codex  # List contents
+
+# Or use Python upload script directly:
+python scripts/upload_assets.py --manhwa no-more-princes
+```
 
 ## Script Maintenance
 

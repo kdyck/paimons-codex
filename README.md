@@ -46,11 +46,13 @@ paimons-codex/
 │   └── package.json
 ├── config/                # Configuration files
 │   ├── Caddyfile         # Caddy reverse proxy config
+│   ├── minio-init.sh     # MinIO automatic setup script
 │   └── oracle/           # Oracle initialization scripts
 ├── scripts/               # Utility scripts
 │   ├── start.sh          # Development start script
 │   ├── stop.sh           # Stop services script
 │   ├── clean.sh          # Clean reset script
+│   ├── setup-minio.sh    # MinIO configuration script
 │   └── seed-data.py      # Database seeding script
 └── docker-compose.yml     # Docker services configuration
 ```
@@ -91,6 +93,12 @@ chmod +x scripts/*.sh
 ./scripts/start.sh
 ```
 
+**Note**: The startup script automatically configures MinIO:
+- Creates the `codex` bucket for image storage
+- Sets public read permissions for image access
+- Verifies bucket policies are correctly applied
+- This happens automatically after the services start
+
 ### 4. Seed the Database (Optional)
 
 ```bash
@@ -102,7 +110,6 @@ python scripts/seed-data.py
 
 - **Website**: http://localhost:3000
 - **API Documentation**: http://localhost:8000/docs
-- **Oracle Enterprise Manager**: http://localhost:5500/em
 - **MinIO Console**: http://localhost:9001 (Login: `paimons/paimons123`)
 - **MinIO API**: http://localhost:9000
 
@@ -128,10 +135,12 @@ python scripts/seed-data.py
 - **AI Integration**: Embeddings stored directly in database for faster queries
 
 ### MinIO Object Storage
-- **Image Storage**: Manhwa cover images and content
+- **Image Storage**: Manhwa cover images and content pages
 - **S3-Compatible API**: Standard object storage operations
-- **Web Console**: Browser-based file management interface
+- **Web Console**: Browser-based file management interface at http://localhost:9001
+- **Auto-Configuration**: Automatic bucket creation and public read policies
 - **Scalable**: High-performance distributed object storage
+- **Integration**: Seamless integration with React UI for image display
 
 ### Caddy Reverse Proxy
 - **HTTPS**: Automatic HTTPS certificates

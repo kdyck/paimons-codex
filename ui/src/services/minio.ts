@@ -7,7 +7,9 @@ export function toMinioUrl(input: string) {
   if (!input) return "";
   if (/^https?:\/\//i.test(input)) return input;
   const key = input.replace(/^\/+/, "");
-  return `${BASE}/${BUCKET}/${key}`;
+  const url = `${BASE}/${BUCKET}/${key}`;
+  console.log('toMinioUrl:', input, '→', url);
+  return url;
 }
 
 /** Build a page URL: ch_#/pg_#.jpg */
