@@ -6,10 +6,12 @@ import io
 
 class MinIOClient:
     def __init__(self):
-        self.endpoint = os.getenv('MINIO_ENDPOINT', 'localhost:9000')
+        endpoint_url = os.getenv('MINIO_ENDPOINT', 'http://localhost:9000')
+        # Remove http:// or https:// prefix for Minio client
+        self.endpoint = endpoint_url.replace('http://', '').replace('https://', '')
         self.access_key = os.getenv('MINIO_ACCESS_KEY', 'paimons')
         self.secret_key = os.getenv('MINIO_SECRET_KEY', 'paimons123')
-        self.bucket_name = os.getenv('MINIO_BUCKET_NAME', 'manhwa-images')
+        self.bucket_name = os.getenv('MINIO_BUCKET_NAME', 'codex')
         
         # Initialize MinIO client
         self.client = Minio(
@@ -77,7 +79,8 @@ class MinIOClient:
             )
             
             # Return the URL to access the file
-            url = f"http://{self.endpoint.replace('minio:', 'localhost')}/{self.bucket_name}/{object_name}"
+            endpoint_for_url = self.endpoint.replace('minio:', 'localhost:')
+            url = f"http://{endpoint_for_url}/{self.bucket_name}/{object_name}"
             print(f"Successfully uploaded {file_path} as {object_name}")
             return url
             
@@ -111,7 +114,8 @@ class MinIOClient:
             )
             
             # Return the URL to access the file
-            url = f"http://{self.endpoint.replace('minio:', 'localhost')}/{self.bucket_name}/{object_name}"
+            endpoint_for_url = self.endpoint.replace('minio:', 'localhost:')
+            url = f"http://{endpoint_for_url}/{self.bucket_name}/{object_name}"
             print(f"Successfully uploaded bytes as {object_name}")
             return url
             
@@ -150,7 +154,8 @@ class MinIOClient:
         Returns:
             URL to access the file
         """
-        return f"http://{self.endpoint.replace('minio:', 'localhost')}/{self.bucket_name}/{object_name}"
+        endpoint_for_url = self.endpoint.replace('minio:', 'localhost:')
+        return f"http://{endpoint_for_url}/{self.bucket_name}/{object_name}"
     
     def file_exists(self, object_name: str) -> bool:
         """

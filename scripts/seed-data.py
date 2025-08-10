@@ -12,7 +12,6 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'api'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'dal'))
 
 from dal.oracle_client import OracleClient
-from dal.chroma_client import ChromaClient
 
 sample_manhwa_data = [
     {
@@ -62,12 +61,37 @@ sample_manhwa_data = [
     }
 ]
 
+def _generate_simple_embedding(title: str, description: str, genres: list) -> list:
+    """Generate a simple deterministic embedding for development/seeding"""
+    import hashlib
+    
+    # Combine text for embedding
+    text = f"{title} {description} {' '.join(genres)}".lower()
+    
+    # Create a hash-based embedding (384 dimensions)
+    hash_obj = hashlib.md5(text.encode())
+    hash_hex = hash_obj.hexdigest()
+    
+    # Convert hex to normalized float values
+    embedding = []
+    for i in range(0, min(len(hash_hex), 96), 2):  # 96 hex chars = 48 bytes = 384 bits
+        hex_pair = hash_hex[i:i+2]
+        # Convert hex to float between -1 and 1
+        val = (int(hex_pair, 16) - 127.5) / 127.5
+        embedding.extend([val] * 8)  # Repeat to get to 384 dimensions
+    
+    # Pad or truncate to exactly 384 dimensions
+    while len(embedding) < 384:
+        embedding.append(0.0)
+    embedding = embedding[:384]
+    
+    return embedding
+
 async def seed_database():
     print("🌱 Starting database seeding...")
     
-    # Initialize clients
+    # Initialize Oracle client
     oracle_client = OracleClient()
-    chroma_client = ChromaClient()
     
     try:
         # Initialize database tables
@@ -82,13 +106,14 @@ async def seed_database():
             # Create manhwa in Oracle
             manhwa = await oracle_client.create_manhwa(manhwa_data)
             
-            # Add embedding to ChromaDB
-            await chroma_client.add_manhwa_embedding(
-                manhwa_id=manhwa["id"],
-                title=manhwa["title"],
-                description=manhwa["description"],
-                genre=manhwa["genre"]
+            # Generate and add embedding to Oracle
+            print(f"   Generating embedding for: {manhwa_data['title']}")
+            embedding = _generate_simple_embedding(
+                manhwa_data['title'],
+                manhwa_data['description'], 
+                manhwa_data['genre']
             )
+            await oracle_client.update_manhwa_embedding(manhwa["id"], embedding)
         
         print("✅ Database seeding completed successfully!")
         print(f"📊 Added {len(sample_manhwa_data)} manhwa entries")

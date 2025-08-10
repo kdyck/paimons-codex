@@ -9,8 +9,7 @@ show_usage() {
     echo "Available services:"
     echo "  api        - FastAPI backend service"
     echo "  ui         - React frontend service"
-    echo "  oracle-db  - Oracle 23ai database"
-    echo "  chromadb   - ChromaDB vector database"
+    echo "  oracle-db  - Oracle 23ai database with vector search"
     echo "  caddy      - Caddy reverse proxy"
     echo "  minio      - MinIO object storage"
     echo ""
@@ -44,7 +43,7 @@ for arg in "$@"; do
         --volumes)
             REMOVE_VOLUMES=true
             ;;
-        api|ui|oracle-db|chromadb|caddy|minio)
+        api|ui|oracle-db|caddy|minio)
             TARGET_SERVICES="$TARGET_SERVICES $arg"
             ;;
         *)
@@ -65,7 +64,7 @@ if [ -z "$TARGET_SERVICES" ]; then
         echo "🗑️  Stopping and removing all containers..."
         podman-compose down
         # Remove all project containers
-        podman rm -f paimons-api paimons-ui paimons-oracle paimons-chroma paimons-caddy 2>/dev/null || true
+        podman rm -f paimons-api paimons-ui paimons-oracle paimons-caddy paimons-minio 2>/dev/null || true
     else
         podman-compose down
     fi

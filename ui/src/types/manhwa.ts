@@ -5,7 +5,8 @@ export interface Manhwa {
   genre: string[];
   status: string;
   description: string;
-  cover_image?: string;
+  cover_image?: string;  // optional override
+  slug: string;          // e.g., "no-more-princes"
 }
 
 export interface SearchResult extends Manhwa {

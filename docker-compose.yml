@@ -10,7 +10,6 @@ services:
       - ORACLE_CHARACTERSET=AL32UTF8
     ports:
       - "1521:1521"
-      - "5500:5500"
     volumes:
       - oracle_data:/opt/oracle/oradata
       - ./config/oracle:/opt/oracle/scripts/startup
@@ -34,19 +33,17 @@ services:
       - ORACLE_USER=paimons_user
       - ORACLE_PASSWORD=password123
       - ORACLE_DSN=oracle-db:1521/FREEPDB1
-      - CHROMA_DB_PATH=/app/chroma_db
       - PYTHONPATH=/app
       - ORACLE_SKIP=true
       - MINIO_ENDPOINT=minio:9000
       - MINIO_ACCESS_KEY=paimons
       - MINIO_SECRET_KEY=paimons123
-      - MINIO_BUCKET_NAME=manhwa-images
+      - MINIO_BUCKET_NAME=codex
     ports:
       - "127.0.0.1:8000:8000"
     volumes:
       - ./api:/app
       - ./dal:/app/dal
-      - chroma_data:/app/chroma_db
     # depends_on:
     #   oracle-db:
     #     condition: service_healthy
@@ -87,18 +84,6 @@ services:
       - ui
     restart: unless-stopped
 
-  # ChromaDB (if you want to run it separately)
-  chromadb:
-    image: chromadb/chroma:latest
-    container_name: paimons-chroma
-    ports:
-      - "127.0.0.1:8001:8000"
-    volumes:
-      - chroma_data:/chroma/chroma
-    environment:
-      - CHROMA_SERVER_AUTHN_CREDENTIALS_FILE=/chroma/auth.txt
-      - CHROMA_SERVER_AUTHN_PROVIDER=chromadb.auth.basic.BasicAuthServerProvider
-    restart: unless-stopped
 
   # MinIO Object Storage
   minio:
@@ -123,7 +108,6 @@ services:
 
 volumes:
   oracle_data:
-  chroma_data:
   caddy_data:
   caddy_config:
   minio_data:

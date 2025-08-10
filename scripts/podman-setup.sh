@@ -33,13 +33,13 @@ systemctl --user start podman.socket 2>/dev/null || true
 
 # Create necessary directories with proper permissions
 echo "📁 Creating directories..."
-mkdir -p chroma_data oracle_data
-chmod 755 chroma_data oracle_data
+mkdir -p oracle_data minio_data
+chmod 755 oracle_data minio_data
 
 # Set up SELinux labels if SELinux is enabled
 if command -v getenforce &> /dev/null && [[ $(getenforce) != "Disabled" ]]; then
     echo "🔒 Setting SELinux contexts..."
-    chcon -Rt svirt_sandbox_file_t chroma_data oracle_data 2>/dev/null || true
+    chcon -Rt svirt_sandbox_file_t oracle_data minio_data 2>/dev/null || true
 fi
 
 echo "✅ Podman environment setup complete!"

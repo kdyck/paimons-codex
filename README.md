@@ -1,6 +1,6 @@
 # 📚 Paimon's Codex
 
-A modern manhwa discovery platform powered by AI, built with FastAPI, React, Oracle 23ai, and ChromaDB.
+A modern manhwa discovery platform powered by AI, built with FastAPI, React, and Oracle 23ai with vector search.
 
 ## 🏗️ Architecture
 
@@ -12,12 +12,6 @@ A modern manhwa discovery platform powered by AI, built with FastAPI, React, Ora
 └─────────────────┘    └─────────────────┘    └─────────────────┘
          │                       │                       │
          │                       │              ┌─────────────────┐
-         │                       │              │   ChromaDB      │
-         │                       │              │  (Vector DB)    │
-         │                       │              │   Port: 8001    │
-         │                       │              └─────────────────┘
-         │                       │                       │
-         │                       │              ┌─────────────────┐
          │                       │              │   MinIO         │
          │                       │              │ (Object Store)  │
          │                       │              │ Port: 9000/9001 │
@@ -25,7 +19,8 @@ A modern manhwa discovery platform powered by AI, built with FastAPI, React, Ora
          │                       │                       │
          │                       │              ┌─────────────────┐
          │                       │              │  Oracle 23ai    │
-         │                       └──────────────│  (Database)     │
+         │                       └──────────────│ (Database +     │
+         │                                      │ Vector Search)  │
          │                                      │   Port: 1521    │
          └──────────────────────────────────────└─────────────────┘
 ```
@@ -40,8 +35,8 @@ paimons-codex/
 │   ├── llm/               # LLM integration (Open LLaMA)
 │   └── main.py            # FastAPI application entry point
 ├── dal/                   # Data Access Layer
-│   ├── chroma_client.py   # ChromaDB client
-│   └── oracle_client.py   # Oracle database client
+│   ├── oracle_client.py   # Oracle 23ai database client with vector search
+│   └── minio_client.py    # MinIO object storage client
 ├── ui/                    # React frontend
 │   ├── src/
 │   │   ├── components/    # React components
@@ -108,7 +103,6 @@ python scripts/seed-data.py
 - **Website**: http://localhost:3000
 - **API Documentation**: http://localhost:8000/docs
 - **Oracle Enterprise Manager**: http://localhost:5500/em
-- **ChromaDB**: http://localhost:8001
 - **MinIO Console**: http://localhost:9001 (Login: `paimons/paimons123`)
 - **MinIO API**: http://localhost:9000
 
@@ -118,7 +112,7 @@ python scripts/seed-data.py
 - **REST API**: Manhwa CRUD operations, search endpoints
 - **LLM Integration**: Open LLaMA for text generation and summarization
 - **Authentication**: JWT-based authentication (future enhancement)
-- **Vector Search**: Integration with ChromaDB for semantic search
+- **Vector Search**: Oracle 23ai vector capabilities for semantic search
 
 ### React Frontend (`ui/`)
 - **Modern UI**: Styled-components with glassmorphism design
@@ -128,13 +122,10 @@ python scripts/seed-data.py
 
 ### Oracle 23ai Database
 - **Relational Data**: Manhwa metadata, user data, reviews
+- **Vector Search**: Built-in vector similarity search with VECTOR data type
 - **JSON Support**: Advanced JSON document features
 - **Performance**: Enterprise-grade performance and reliability
-
-### ChromaDB Vector Database
-- **Embeddings**: Sentence transformers for manhwa descriptions
-- **Similarity Search**: Semantic search capabilities
-- **Recommendations**: AI-powered similar manhwa suggestions
+- **AI Integration**: Embeddings stored directly in database for faster queries
 
 ### MinIO Object Storage
 - **Image Storage**: Manhwa cover images and content
@@ -181,29 +172,32 @@ npm start
 # Connect to Oracle container
 podman exec -it paimons-oracle sqlplus paimons_user/password123@//localhost:1521/FREEPDB1
 
-# View ChromaDB collections
-curl http://localhost:8001/api/v1/collections
+# Check Oracle vector search capability
+# In Oracle SQL:
+# SELECT * FROM manhwa WHERE embedding IS NOT NULL;
 ```
 
 ## 📊 API Endpoints
 
 ### Manhwa Management
-- `GET /api/v1/manhwa/` - List all manhwa
-- `GET /api/v1/manhwa/{id}` - Get specific manhwa
-- `POST /api/v1/manhwa/` - Create new manhwa
+- `GET /api/manhwa/` - List all manhwa
+- `GET /api/manhwa/{id}` - Get specific manhwa
+- `POST /api/manhwa/` - Create new manhwa
+- `PUT /api/manhwa/{id}` - Update manhwa
+- `DELETE /api/manhwa/{id}` - Delete manhwa
 
 ### Search & Discovery
-- `GET /api/v1/search/?q={query}` - Search manhwa
-- `GET /api/v1/search/similar/{id}` - Find similar manhwa
+- `GET /api/search/?q={query}` - Search manhwa
+- `GET /api/manhwa/{id}/similar` - Find similar manhwa using vector search
 
 ### Image Management
-- `POST /api/v1/images/upload` - Upload single image
-- `POST /api/v1/images/upload-multiple` - Upload multiple images
-- `DELETE /api/v1/images/{filename}` - Delete image
+- `POST /api/images/upload` - Upload single image
+- `POST /api/images/upload-multiple` - Upload multiple images
+- `DELETE /api/images/{filename}` - Delete image
 
 ### AI Features
-- `POST /api/v1/llm/generate` - Generate text with LLaMA
-- `POST /api/v1/llm/summarize` - Summarize manhwa
+- `POST /api/llm/generate` - Generate text with LLaMA
+- `POST /api/llm/summarize` - Summarize manhwa
 
 ## 🔐 Security Features
 

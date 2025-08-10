@@ -23,8 +23,7 @@ Start all or specific services in the development environment.
 **Available Services:**
 - `api` - FastAPI backend service
 - `ui` - React frontend service  
-- `oracle-db` - Oracle 23ai database
-- `chromadb` - ChromaDB vector database
+- `oracle-db` - Oracle 23ai database with vector search
 - `caddy` - Caddy reverse proxy
 - `minio` - MinIO object storage
 
@@ -61,7 +60,7 @@ Completely clean the development environment, removing all containers, images, a
 ./scripts/clean.sh
 ```
 
-⚠️ **WARNING:** This will delete all database data and embeddings! Use with caution.
+⚠️ **WARNING:** This will delete all database data and vector embeddings! Use with caution.
 
 ### 🔧 `podman-setup.sh` - Setup Podman
 Initialize the Podman environment for the project.
@@ -107,11 +106,11 @@ python scripts/seed-data.py
 
 ### Backend-Only Development
 ```bash
-# Start API and databases
-./scripts/start.sh api oracle-db chromadb
+# Start API and database
+./scripts/start.sh api oracle-db
 
 # When done
-./scripts/stop.sh api oracle-db chromadb
+./scripts/stop.sh api oracle-db
 ```
 
 ### Object Storage Development
@@ -146,14 +145,14 @@ python scripts/seed-data.py
 When starting specific services, be aware of dependencies:
 
 - **UI** depends on **API**
-- **API** depends on **ChromaDB** (and optionally **Oracle DB**)
+- **API** depends on **Oracle DB** (with embedded vector search)
 - **API** can optionally use **MinIO** for image storage
 - **Caddy** proxies to **UI** and **API**
 
 For most development work:
 - Frontend: `./scripts/start.sh ui api`
-- Backend: `./scripts/start.sh api chromadb`
-- With images: `./scripts/start.sh api minio chromadb`
+- Backend: `./scripts/start.sh api oracle-db`
+- With images: `./scripts/start.sh api oracle-db minio`
 - Full stack: `./scripts/start.sh` (all services)
 
 ## Troubleshooting
@@ -176,8 +175,8 @@ podman logs paimons-api
 Default ports:
 - **3000** - React UI
 - **8000** - FastAPI backend
-- **1521** - Oracle database
-- **8001** - ChromaDB
+- **1521** - Oracle database (with vector search)
+- **5500** - Oracle Enterprise Manager
 - **9000** - MinIO API
 - **9001** - MinIO Console (Web UI)
 - **8080/8443** - Caddy proxy

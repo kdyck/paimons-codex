@@ -8,14 +8,13 @@ services:
       dockerfile: Dockerfile.simple
     container_name: paimons-api
     environment:
-      - CHROMA_DB_PATH=/app/chroma_db
       - PYTHONPATH=/app
       - ORACLE_SKIP=true
     ports:
       - "8000:8000"
     volumes:
       - ./api:/app
-      - chroma_data:/app/chroma_db
+      - ./dal:/app/dal
     restart: unless-stopped
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
@@ -35,15 +34,6 @@ services:
     restart: unless-stopped
     command: npm start
 
-  # ChromaDB
-  chromadb:
-    image: chromadb/chroma:latest
-    container_name: paimons-chroma
-    ports:
-      - "8001:8000"
-    volumes:
-      - chroma_data:/chroma/chroma
-    restart: unless-stopped
 
   # Simple reverse proxy with nginx (lighter than Caddy for dev)
   nginx:
@@ -59,4 +49,3 @@ services:
     restart: unless-stopped
 
 volumes:
-  chroma_data:

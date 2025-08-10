@@ -4,6 +4,8 @@ import styled, { ThemeProvider as StyledThemeProvider } from 'styled-components'
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import HomePage from './pages/HomePage';
 import LibraryPage from './pages/LibraryPage';
+import AdminPage from './pages/AdminPage';
+import ManhwaDetailPage from './pages/ManhwaDetailPage';
 import Header from './components/Header';
 
 const AppContainer = styled.div`
@@ -23,6 +25,8 @@ const AppContent: React.FC = () => {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/library" element={<LibraryPage />} />
+            <Route path="/admin" element={<AdminPage />} />
+            <Route path="/manhwa/:id" element={<ManhwaDetailPage />} />
           </Routes>
         </Router>
       </AppContainer>

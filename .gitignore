@@ -71,7 +71,7 @@ ui/src/App.js
 
 # Docker volumes data (but keep the directories)
 oracle_data/
-chroma_data/
+minio_data/
 caddy_data/
 caddy_config/
 
@@ -88,3 +88,4 @@ caddy_config/
 .mypy_cache/
 .dmypy.json
 dmypy.json
+/no-more-princes.json

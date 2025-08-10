@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { Manhwa } from '../types/manhwa';
+import { toMinioUrl, coverUrlFromSlug } from '../services/minio';
 
 const Card = styled.div`
   background: ${props => props.theme.colors.glass.background};
@@ -75,11 +76,14 @@ const ManhwaCard: React.FC<ManhwaCardProps> = ({ manhwa }) => {
     navigate(`/manhwa/${manhwa.id}`);
   };
 
+  const slug = manhwa.slug || manhwa.id;
+  const coverSrc = manhwa.cover_image
+    ? toMinioUrl(manhwa.cover_image)
+    : coverUrlFromSlug(slug);
+
   return (
     <Card onClick={handleClick}>
-      {manhwa.cover_image && (
-        <CoverImage src={manhwa.cover_image} alt={manhwa.title} />
-      )}
+      <CoverImage src={coverSrc} alt={manhwa.title} />
       <Title>{manhwa.title}</Title>
       <Author>by {manhwa.author}</Author>
       <GenreList>
