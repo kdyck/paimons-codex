@@ -230,7 +230,7 @@ const AdminPage: React.FC = () => {
   const fetchManhwas = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/v1/manhwa/');
+      const response = await fetch('http://localhost:8000/api/v1/manhwa/');
       if (!response.ok) throw new Error('Failed to fetch manhwas');
       const data = await response.json();
       setManhwas(data);
@@ -277,7 +277,7 @@ const AdminPage: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`/api/v1/manhwa/${manhwa.id}`, {
+      const response = await fetch(`http://localhost:8000/api/v1/manhwa/${manhwa.id}`, {
         method: 'DELETE'
       });
 
@@ -309,8 +309,8 @@ const AdminPage: React.FC = () => {
       };
 
       const url = editingManhwa 
-        ? `/api/v1/manhwa/${editingManhwa.id}` 
-        : '/api/v1/manhwa/';
+        ? `http://localhost:8000/api/v1/manhwa/${editingManhwa.id}` 
+        : 'http://localhost:8000/api/v1/manhwa/';
       
       const method = editingManhwa ? 'PUT' : 'POST';
 
