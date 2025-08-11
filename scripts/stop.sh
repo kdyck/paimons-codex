@@ -12,7 +12,7 @@ show_usage() {
     echo "  oracle-db  - Oracle 23ai database with vector search"
     echo "  caddy      - Caddy reverse proxy"
     echo "  minio      - MinIO object storage"
-    echo "  open-webui - Open WebUI AI chat interface"
+    echo "  ollama     - Ollama LLM server"
     echo ""
     echo "Examples:"
     echo "  $0           # Stop all services"
@@ -44,7 +44,7 @@ for arg in "$@"; do
         --volumes)
             REMOVE_VOLUMES=true
             ;;
-        api|ui|oracle-db|caddy|minio|open-webui)
+        api|ui|oracle-db|caddy|minio|ollama)
             TARGET_SERVICES="$TARGET_SERVICES $arg"
             ;;
         *)
@@ -65,20 +65,19 @@ if [ -z "$TARGET_SERVICES" ]; then
         echo "🗑️  Stopping and removing all containers..."
         podman-compose down
         # Remove all project containers
-        podman rm -f paimons-api paimons-ui paimons-oracle paimons-caddy paimons-minio 2>/dev/null || true
-        # Stop standalone Open WebUI container
-        podman stop paimons-openwebui 2>/dev/null || true
-        podman rm -f paimons-openwebui 2>/dev/null || true
+        podman rm -f paimons-api paimons-ui paimons-oracle paimons-caddy paimons-minio paimons-ollama 2>/dev/null || true
     else
         podman-compose down
-        # Stop standalone Open WebUI container
-        podman stop paimons-openwebui 2>/dev/null || true
     fi
     
     echo "✅ All services stopped."
 else
     echo "🛑 Stopping specified services:$TARGET_SERVICES"
-    podman-compose stop $TARGET_SERVICES
+    
+    # Stop specified services with main compose
+    if [ -n "$TARGET_SERVICES" ]; then
+        podman-compose stop $TARGET_SERVICES
+    fi
     
     if [ "$REMOVE_CONTAINERS" = true ]; then
         echo "🗑️  Removing containers..."
@@ -86,8 +85,6 @@ else
             container_name="paimons-${service}"
             if [ "$service" = "oracle-db" ]; then
                 container_name="paimons-oracle"
-            elif [ "$service" = "open-webui" ]; then
-                container_name="paimons-openwebui"
             fi
             podman rm -f $container_name 2>/dev/null || echo "Container $container_name not found or already removed"
         done

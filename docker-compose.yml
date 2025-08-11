@@ -29,6 +29,7 @@ services:
     container_name: paimons-api
     depends_on:
       - minio
+      - ollama
     environment:
       - ORACLE_USER=paimons_user
       - ORACLE_PASSWORD=password123
@@ -39,7 +40,7 @@ services:
       - MINIO_ACCESS_KEY=paimons
       - MINIO_SECRET_KEY=paimons123
       - MINIO_BUCKET_NAME=codex
-      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - OLLAMA_BASE_URL=http://10.89.0.4:11434
     ports:
       - "127.0.0.1:8000:8000"
     volumes:
@@ -107,10 +108,24 @@ services:
       timeout: 20s
       retries: 3
 
-
+  # Ollama LLM Server  
+  ollama:
+    image: ollama/ollama:latest
+    container_name: paimons-ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0:11434
+      - OLLAMA_NUM_CTX=4096
+      - OLLAMA_KEEP_ALIVE=10m
+      - OLLAMA_NUM_THREAD=8
+    ports:
+      - "127.0.0.1:11434:11434"
+    volumes:
+      - ollama_models:/root/.ollama
+    restart: unless-stopped
 
 volumes:
   oracle_data:
   caddy_data:
   caddy_config:
   minio_data:
+  ollama_models:

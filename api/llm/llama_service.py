@@ -5,21 +5,35 @@ import os
 
 class LlamaService:
     def __init__(self):
-        self.ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://192.168.1.99:11434")
+        self.ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
         print(f"LlamaService initialized with Ollama at {self.ollama_base_url}")
     
     async def get_available_models(self) -> List[Dict[str, Any]]:
         """Get list of available models from Ollama"""
-        try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get(f"{self.ollama_base_url}/api/tags")
-                if response.status_code == 200:
-                    data = response.json()
-                    return data.get("models", [])
+        import asyncio
+        
+        for attempt in range(3):
+            try:
+                timeout = httpx.Timeout(20.0, connect=10.0, read=15.0)
+                limits = httpx.Limits(max_keepalive_connections=1, max_connections=5)
+                async with httpx.AsyncClient(timeout=timeout, limits=limits, follow_redirects=True) as client:
+                    response = await client.get(f"{self.ollama_base_url}/api/tags")
+                    if response.status_code == 200:
+                        data = response.json()
+                        models = data.get("models", [])
+                        print(f"Successfully retrieved {len(models)} models from Ollama")
+                        return models
+                    else:
+                        print(f"Ollama returned status {response.status_code}")
+                        return []
+            except Exception as e:
+                print(f"Error getting models (attempt {attempt + 1}): {e}")
+                if attempt < 2:
+                    print(f"Waiting 3 seconds before retry...")
+                    await asyncio.sleep(3)
+                    continue
                 return []
-        except Exception as e:
-            print(f"Error getting models: {e}")
-            return []
+        return []
     
     async def generate(self, prompt: str, max_tokens: int = 100, temperature: float = 0.7, model: str = None) -> Dict[str, Any]:
         """Generate text using Ollama"""

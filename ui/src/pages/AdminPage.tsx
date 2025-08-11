@@ -51,9 +51,21 @@ const GeneratorTitle = styled.h2`
 
 const GeneratorForm = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
+  
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+  
+  @media (min-width: 901px) and (max-width: 1200px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  @media (min-width: 1201px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
 `;
 
 const GeneratorField = styled.div`
@@ -165,7 +177,7 @@ const GenreCheckbox = styled.label`
     border-color: rgba(102, 126, 234, 0.3);
   }
 
-  input:checked + & {
+  &:has(input:checked) {
     background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
     border-color: #667eea;
   }
@@ -1160,15 +1172,7 @@ const AdminPage: React.FC = () => {
             <GenreContainer>
               <GenreGrid>
                 {['fantasy', 'romance', 'action', 'mystery', 'drama', 'comedy', 'horror', 'sci-fi', 'slice-of-life', 'psychological', 'historical', 'mature', 'smut'].map(genre => (
-                  <GenreCheckbox
-                    key={genre}
-                    style={{
-                      background: generatorForm.genre.includes(genre) 
-                        ? 'linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2))' 
-                        : undefined,
-                      borderColor: generatorForm.genre.includes(genre) ? '#667eea' : undefined
-                    }}
-                  >
+                  <GenreCheckbox key={genre}>
                     <CheckboxInput
                       type="checkbox"
                       checked={generatorForm.genre.includes(genre)}
