@@ -85,6 +85,16 @@ echo ""
 echo "🪣 Initializing MinIO bucket..."
 ./scripts/init-minio-bucket.sh
 
+# Check and pull Ollama models
+echo ""
+echo "🦙 Checking Ollama models..."
+if curl -s http://127.0.0.1:11434/api/tags | grep -q '"models":\[]'; then
+    echo "📥 No models found, pulling llama3.2..."
+    ollama pull llama3.2
+    echo "✅ llama3.2 model ready"
+else
+    echo "✅ Ollama models already available"
+fi
 
 echo ""
 echo "✅ Paimon's Codex is now running!"

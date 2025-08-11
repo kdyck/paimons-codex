@@ -18,6 +18,14 @@ except Exception as e:
     logging.warning(f"Stable Diffusion dependencies not available: {e}")
     STABLE_DIFFUSION_AVAILABLE = False
 
+# Long prompt weighting support (optional)
+try:
+    from compel import Compel, ReturnedEmbeddingsType
+    COMPEL_AVAILABLE = True
+except Exception as e:
+    logging.warning(f"Compel not available - long prompts will be truncated: {e}")
+    COMPEL_AVAILABLE = False
+
 from PIL import Image, ImageDraw, ImageFont
 
 logger = logging.getLogger(__name__)
@@ -39,6 +47,7 @@ class ImageGenerationService:
     def __init__(self):
         self.pipeline = None
         self._i2i = None  # lazily built img2img pipeline from base pipe
+        self._compel = None  # Compel for long prompt weighting
         self._lock = asyncio.Lock()
 
         if not STABLE_DIFFUSION_AVAILABLE:
@@ -105,16 +114,82 @@ class ImageGenerationService:
     def build_prompts(self, prompt: str, style: str = "anime") -> Tuple[str, str]:
         style_prompts = {
             "anime": "anime style, manga art, cel-shaded, clean lines, vibrant colors",
-            "realistic": "realistic, detailed, photorealistic, high quality",
+            "realistic": "realistic, detailed, photorealistic, high quality", 
             "chibi": "chibi style, cute, kawaii, simple, rounded features",
         }
         manhwa = "manhwa style, webtoon style, korean comic art, digital art, beautiful composition, dramatic lighting"
         positive = f"{prompt}, {style_prompts.get(style, style_prompts['anime'])}, {manhwa}"
+        
         negative = (
             "lowres, blurry, jpeg artifacts, watermark, text, signature, bad anatomy, "
             "bad proportions, extra fingers, extra limbs, missing limbs, deformed, worst quality"
         )
         return positive, negative
+
+    def _count_tokens(self, text: str) -> int:
+        """Count tokens in text using the pipeline's tokenizer"""
+        if not STABLE_DIFFUSION_AVAILABLE or self.pipeline is None:
+            # Rough word-based estimate if tokenizer unavailable
+            return len(text.split())
+        
+        try:
+            tokens = self.pipeline.tokenizer.encode(text)
+            return len(tokens)
+        except Exception:
+            # Fallback to word count
+            return len(text.split())
+    
+    def _check_token_limits(self, prompt: str, negative_prompt: str) -> None:
+        """Check and warn about token limits"""
+        if not STABLE_DIFFUSION_AVAILABLE:
+            return
+            
+        pos_tokens = self._count_tokens(prompt)
+        neg_tokens = self._count_tokens(negative_prompt)
+        
+        if not COMPEL_AVAILABLE:
+            if pos_tokens > 77:
+                logger.warning(f"⚠️  Positive prompt has {pos_tokens} tokens (CLIP limit: 77) - text will be truncated! Install 'compel' for long prompt support.")
+            if neg_tokens > 77:
+                logger.warning(f"⚠️  Negative prompt has {neg_tokens} tokens (CLIP limit: 77) - text will be truncated! Install 'compel' for long prompt support.")
+        else:
+            if pos_tokens > 77:
+                logger.info(f"✅ Long positive prompt detected ({pos_tokens} tokens) - using Compel for processing")
+            if neg_tokens > 77:
+                logger.info(f"✅ Long negative prompt detected ({neg_tokens} tokens) - using Compel for processing")
+
+    def _get_prompt_embeddings(self, prompt: str, negative_prompt: str) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Generate prompt embeddings using Compel for long prompt support"""
+        # Check token limits and warn if needed
+        self._check_token_limits(prompt, negative_prompt)
+        
+        if not STABLE_DIFFUSION_AVAILABLE or not COMPEL_AVAILABLE or self.pipeline is None:
+            return None, None
+            
+        if self._compel is None:
+            logger.info("Initializing Compel for long prompt weighting")
+            try:
+                self._compel = Compel(
+                    tokenizer=self.pipeline.tokenizer,
+                    text_encoder=self.pipeline.text_encoder,
+                    device=self.device,
+                    truncate_long_prompts=False
+                )
+            except Exception as e:
+                logger.warning(f"Failed to initialize Compel: {e}")
+                return None, None
+        
+        try:
+            # Generate embeddings using Compel (handles >77 tokens automatically)
+            prompt_embeds = self._compel(prompt)
+            negative_prompt_embeds = self._compel(negative_prompt)
+            
+            logger.info(f"Generated embeddings for prompt ({len(prompt.split())} words)")
+            return prompt_embeds, negative_prompt_embeds
+            
+        except Exception as e:
+            logger.warning(f"Failed to generate embeddings with Compel: {e}")
+            return None, None
 
     # ----------------------------- Model load --------------------------------
     async def load_model(self, style: str = "anime", model_override: Optional[str] = None):
@@ -166,6 +241,7 @@ class ImageGenerationService:
                         self.pipeline.enable_model_cpu_offload()
 
                 self._i2i = None  # reset; will rebuild from new base pipe lazily
+                self._compel = None  # reset; will rebuild with new model
                 self.loaded_style = style
                 self.loaded_model_id = target_model_id
                 logger.info("Model loaded successfully")
@@ -296,15 +372,32 @@ class ImageGenerationService:
         upscale = max(1.0, width / base_w)
 
         try:
-            img = self.pipeline(
-                prompt=pos,
-                negative_prompt=neg,
-                width=base_w,
-                height=base_h,
-                num_inference_steps=25,
-                guidance_scale=7.5,
-                generator=self._generator(seed),
-            ).images[0]
+            # Use Compel for long prompt support
+            prompt_embeds, negative_prompt_embeds = self._get_prompt_embeddings(pos, neg)
+            
+            if prompt_embeds is not None and negative_prompt_embeds is not None:
+                # Use embeddings (supports >77 tokens)
+                img = self.pipeline(
+                    prompt_embeds=prompt_embeds,
+                    negative_prompt_embeds=negative_prompt_embeds,
+                    width=base_w,
+                    height=base_h,
+                    num_inference_steps=25,
+                    guidance_scale=7.5,
+                    generator=self._generator(seed),
+                ).images[0]
+            else:
+                # Fallback to text prompts
+                logger.warning("Using fallback text prompts (may truncate >77 tokens)")
+                img = self.pipeline(
+                    prompt=pos,
+                    negative_prompt=neg,
+                    width=base_w,
+                    height=base_h,
+                    num_inference_steps=25,
+                    guidance_scale=7.5,
+                    generator=self._generator(seed),
+                ).images[0]
         except RuntimeError as e:
             if "CUDA out of memory" in str(e):
                 logger.warning("OOM on first pass; retrying at smaller base size")
@@ -567,6 +660,9 @@ class ImageGenerationService:
         if self._i2i:
             del self._i2i
             self._i2i = None
+        if self._compel:
+            del self._compel
+            self._compel = None
         if STABLE_DIFFUSION_AVAILABLE and torch.cuda.is_available():
             torch.cuda.empty_cache()
         logger.info("ImageGenerationService cleaned up")
