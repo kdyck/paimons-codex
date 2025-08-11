@@ -184,7 +184,7 @@ async def generate_character_art(request: CharacterArtRequest):
     """Generate character artwork using Stable Diffusion"""
     try:
         result = await image_service.generate_character_art(
-            character_prompt=request.character_prompt,
+            request.character_prompt,
             style=request.style,
             width=request.width,
             height=request.height
@@ -198,7 +198,7 @@ async def generate_scene_art(request: ImageGenerationRequest):
     """Generate scene artwork for manhwa panels"""
     try:
         result = await image_service.generate_scene_art(
-            scene_prompt=request.prompt,
+            request.prompt,
             characters=request.characters,
             style=request.style,
             width=request.width,
@@ -252,7 +252,7 @@ async def generate_full_manhwa(story_request: StoryGenerationRequest):
         )
         
         character_art = await image_service.generate_character_art(
-            character_prompt=character_sheet["art_prompt"],
+            character_sheet["art_prompt"],
             style=story_request.art_style
         )
         
