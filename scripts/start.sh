@@ -89,9 +89,18 @@ echo "🪣 Initializing MinIO bucket..."
 echo ""
 echo "🦙 Checking Ollama models..."
 if curl -s http://127.0.0.1:11434/api/tags | grep -q '"models":\[]'; then
-    echo "📥 No models found, pulling llama3.2..."
-    ollama pull llama3.2
-    echo "✅ llama3.2 model ready"
+    echo "📥 No models found, attempting to pull llama3..."
+    if ollama pull llama3; then
+        echo "✅ llama3 model ready"
+    else
+        echo "⚠️  llama3 failed, falling back to llama3.2..."
+        if ollama pull llama3.2; then
+            echo "✅ llama3.2 model ready"
+        else
+            echo "❌ Failed to pull both llama3 and llama3.2 models"
+            echo "You may need to manually run: ollama pull llama3.2"
+        fi
+    fi
 else
     echo "✅ Ollama models already available"
 fi
