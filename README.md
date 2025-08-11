@@ -109,6 +109,7 @@ python scripts/seed-data.py
 ### 5. Access the Application
 
 - **Website**: http://localhost:3000
+- **AI Chat Assistant**: http://localhost:3001 (also integrated in main app)
 - **API Documentation**: http://localhost:8000/docs
 - **MinIO Console**: http://localhost:9001 (Login: `paimons/paimons123`)
 - **MinIO API**: http://localhost:9000
@@ -207,6 +208,11 @@ podman exec -it paimons-oracle sqlplus paimons_user/password123@//localhost:1521
 ### AI Features
 - `POST /api/llm/generate` - Generate text with LLaMA
 - `POST /api/llm/summarize` - Summarize manhwa
+
+### AI Chat Assistant
+- **Interactive Chat**: Click the chat icon in the header to access the AI assistant
+- **Powered by Ollama**: Uses your local Llama3 model via Open WebUI
+- **Integrated Experience**: Seamlessly embedded within the main application
 
 ## 🔐 Security Features
 

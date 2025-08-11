@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import ThemeToggle from './ThemeToggle';
+import ChatBot from './ChatBot';
 
 const HeaderContainer = styled.header`
   background: ${props => props.theme.colors.glass.background};
@@ -208,6 +209,28 @@ const ProfileIcon = styled.button`
   }
 `;
 
+const ChatButton = styled.button`
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  
+  &:hover {
+    background: linear-gradient(135deg, #764ba2, #f093fb);
+    transform: scale(1.05);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+  }
+`;
+
 const SearchSection = styled.div`
   background: ${props => props.theme.colors.glass.background};
   backdrop-filter: ${props => props.theme.colors.glass.backdrop};
@@ -301,6 +324,7 @@ const SearchButton = styled.button`
 const Header: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const navigate = useNavigate();
   
   console.log('Header rendering');
@@ -323,6 +347,10 @@ const Header: React.FC = () => {
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const toggleChat = () => {
+    setIsChatOpen(!isChatOpen);
   };
 
   return (
@@ -374,6 +402,11 @@ const Header: React.FC = () => {
             </SearchButton>
           </SearchContainer>
         </SearchSection>
+        <ChatButton onClick={toggleChat} title="Open AI Chat">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+        </ChatButton>
         <ProfileIcon onClick={() => navigate('/profile')}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
@@ -407,6 +440,11 @@ const Header: React.FC = () => {
       </TopRow>
       
       <BottomRow>
+        <ChatButton onClick={toggleChat} title="Open AI Chat">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+        </ChatButton>
         <ProfileIcon onClick={() => navigate('/profile')}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
@@ -415,6 +453,8 @@ const Header: React.FC = () => {
         </ProfileIcon>
         <ThemeToggle />
       </BottomRow>
+      
+      <ChatBot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </HeaderContainer>
   );
 };
