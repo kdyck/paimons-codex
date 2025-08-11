@@ -27,6 +27,7 @@ services:
       context: ./api
       dockerfile: Dockerfile
     container_name: paimons-api
+    network_mode: host
     depends_on:
       - minio
     environment:
@@ -35,7 +36,7 @@ services:
       - ORACLE_DSN=oracle-db:1521/FREEPDB1
       - PYTHONPATH=/app
       - ORACLE_SKIP=true
-      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ENDPOINT=localhost:9000
       - MINIO_ACCESS_KEY=paimons
       - MINIO_SECRET_KEY=paimons123
       - MINIO_BUCKET_NAME=codex

@@ -28,6 +28,179 @@ const Header = styled.div`
   }
 `;
 
+const GeneratorSection = styled.div`
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+  backdrop-filter: ${props => props.theme.colors.glass.backdrop};
+  border-radius: 20px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  border: 1px solid rgba(102, 126, 234, 0.3);
+  box-shadow: 0 10px 40px rgba(102, 126, 234, 0.1);
+`;
+
+const GeneratorTitle = styled.h2`
+  color: ${props => props.theme.colors.text.primary};
+  margin: 0 0 1.5rem 0;
+  font-size: 1.8rem;
+  font-weight: bold;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-align: center;
+`;
+
+const GeneratorForm = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+`;
+
+const GeneratorField = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
+const GeneratorLabel = styled.label`
+  color: ${props => props.theme.colors.text.primary};
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+`;
+
+const GeneratorInput = styled.input`
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  background: ${props => props.theme.colors.glass.background};
+  color: ${props => props.theme.colors.text.primary};
+  font-size: 1rem;
+  transition: all 0.3s ease;
+
+  &:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.4);
+  }
+
+  &::placeholder {
+    color: ${props => props.theme.colors.text.placeholder};
+  }
+`;
+
+const GeneratorTextarea = styled.textarea`
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  background: ${props => props.theme.colors.glass.background};
+  color: ${props => props.theme.colors.text.primary};
+  font-size: 1rem;
+  min-height: 100px;
+  resize: vertical;
+  font-family: inherit;
+  transition: all 0.3s ease;
+
+  &:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.4);
+  }
+
+  &::placeholder {
+    color: ${props => props.theme.colors.text.placeholder};
+  }
+`;
+
+const GeneratorSelect = styled.select`
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  background: ${props => props.theme.colors.glass.background};
+  color: ${props => props.theme.colors.text.primary};
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.4);
+  }
+
+  option {
+    background: ${props => props.theme.colors.background};
+    color: ${props => props.theme.colors.text.primary};
+  }
+`;
+
+const GenerationProgress = styled.div`
+  background: ${props => props.theme.colors.glass.background};
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  margin-top: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+`;
+
+const ProgressText = styled.p`
+  color: ${props => props.theme.colors.text.primary};
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  font-weight: 500;
+`;
+
+const ProgressBar = styled.div`
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+`;
+
+const ProgressFill = styled.div<{ $progress: number }>`
+  width: ${props => props.$progress}%;
+  height: 100%;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+`;
+
+const GeneratedResult = styled.div`
+  background: ${props => props.theme.colors.glass.background};
+  border-radius: 16px;
+  padding: 2rem;
+  margin-top: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  max-height: 400px;
+  overflow-y: auto;
+`;
+
+const ResultTitle = styled.h3`
+  color: ${props => props.theme.colors.text.primary};
+  margin: 0 0 1rem 0;
+  font-size: 1.2rem;
+`;
+
+const ResultContent = styled.pre`
+  color: ${props => props.theme.colors.text.secondary};
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  margin: 0;
+`;
+
+const ImagePreview = styled.img`
+  max-width: 200px;
+  max-height: 200px;
+  border-radius: 12px;
+  margin: 0.5rem 0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+`;
+
 const Title = styled.h1`
   color: ${props => props.theme.colors.text.primary};
   margin: 0;
@@ -92,6 +265,30 @@ const DeleteButton = styled(Button)`
   &:hover {
     background: linear-gradient(135deg, #ee5a52, #ff4757);
     box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+  }
+`;
+
+const GenerateButton = styled(Button)`
+  background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin: 0 auto;
+  display: block;
+  min-width: 200px;
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.4);
+
+  &:hover {
+    background: linear-gradient(135deg, #764ba2, #f093fb, #4facfe);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(102, 126, 234, 0.5);
+  }
+
+  &:disabled {
+    background: ${props => props.theme.colors.glass.hover};
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
   }
 `;
 
@@ -470,6 +667,20 @@ const AdminPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
+  // Manhwa Generation States
+  const [generating, setGenerating] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState(0);
+  const [generationStatus, setGenerationStatus] = useState('');
+  const [generatedResult, setGeneratedResult] = useState<any>(null);
+  const [generatorForm, setGeneratorForm] = useState({
+    genre: 'fantasy',
+    setting: 'magical academy',
+    main_character: 'young hero',
+    plot_outline: '',
+    chapter_count: 5,
+    art_style: 'anime'
+  });
+
   const [formData, setFormData] = useState({
     title: '',
     author: '',
@@ -619,6 +830,82 @@ const AdminPage: React.FC = () => {
     });
   };
 
+  const handleGeneratorInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const value = e.target.name === 'chapter_count' ? parseInt(e.target.value) : e.target.value;
+    setGeneratorForm({
+      ...generatorForm,
+      [e.target.name]: value
+    });
+  };
+
+  const generateManhwa = async () => {
+    if (generating) return;
+    
+    try {
+      setGenerating(true);
+      setGenerationProgress(0);
+      setGenerationStatus('Starting manhwa generation...');
+      setGeneratedResult(null);
+      setError(null);
+
+      // Simulate progress updates
+      const progressInterval = setInterval(() => {
+        setGenerationProgress(prev => {
+          if (prev < 90) return prev + 10;
+          return prev;
+        });
+      }, 2000);
+
+      setGenerationStatus('Generating story outline...');
+      
+      const response = await fetch('http://localhost:8000/api/v1/llm/generate-full-manhwa', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(generatorForm),
+      });
+
+      clearInterval(progressInterval);
+
+      if (!response.ok) {
+        throw new Error(`Generation failed: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      setGenerationProgress(100);
+      setGenerationStatus('Generation completed successfully!');
+      setGeneratedResult(result);
+      setSuccess('Manhwa generated successfully! Check the results below.');
+      
+      // Clear success message after 5 seconds
+      setTimeout(() => setSuccess(null), 5000);
+      
+    } catch (err: any) {
+      console.error('Generation error:', err);
+      setError(`Failed to generate manhwa: ${err.message}`);
+      setGenerationStatus('Generation failed');
+      setGenerationProgress(0);
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const downloadGeneratedContent = () => {
+    if (!generatedResult) return;
+    
+    const dataStr = JSON.stringify(generatedResult, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    
+    const exportFileDefaultName = `manhwa-${generatedResult.story?.title?.replace(/\s+/g, '_') || 'generated'}-${Date.now()}.json`;
+    
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+  };
+
   return (
     <Container>
       <Header>
@@ -628,6 +915,173 @@ const AdminPage: React.FC = () => {
 
       {error && <ErrorMessage>{error}</ErrorMessage>}
       {success && <SuccessMessage>{success}</SuccessMessage>}
+
+      {/* AI Manhwa Generator Section */}
+      <GeneratorSection>
+        <GeneratorTitle>🎨 AI Manhwa Generator</GeneratorTitle>
+        <GeneratorForm>
+          <GeneratorField>
+            <GeneratorLabel>Genre</GeneratorLabel>
+            <GeneratorSelect
+              name="genre"
+              value={generatorForm.genre}
+              onChange={handleGeneratorInputChange}
+              disabled={generating}
+            >
+              <option value="fantasy">Fantasy</option>
+              <option value="romance">Romance</option>
+              <option value="action">Action</option>
+              <option value="mystery">Mystery</option>
+              <option value="drama">Drama</option>
+              <option value="comedy">Comedy</option>
+              <option value="horror">Horror</option>
+              <option value="sci-fi">Sci-Fi</option>
+            </GeneratorSelect>
+          </GeneratorField>
+
+          <GeneratorField>
+            <GeneratorLabel>Setting</GeneratorLabel>
+            <GeneratorInput
+              type="text"
+              name="setting"
+              value={generatorForm.setting}
+              onChange={handleGeneratorInputChange}
+              disabled={generating}
+              placeholder="e.g., magical academy, modern city, medieval kingdom"
+            />
+          </GeneratorField>
+
+          <GeneratorField>
+            <GeneratorLabel>Main Character</GeneratorLabel>
+            <GeneratorInput
+              type="text"
+              name="main_character"
+              value={generatorForm.main_character}
+              onChange={handleGeneratorInputChange}
+              disabled={generating}
+              placeholder="e.g., young warrior, talented student, mysterious detective"
+            />
+          </GeneratorField>
+
+          <GeneratorField>
+            <GeneratorLabel>Art Style</GeneratorLabel>
+            <GeneratorSelect
+              name="art_style"
+              value={generatorForm.art_style}
+              onChange={handleGeneratorInputChange}
+              disabled={generating}
+            >
+              <option value="anime">Anime Style</option>
+              <option value="realistic">Realistic</option>
+              <option value="chibi">Chibi/Cute</option>
+            </GeneratorSelect>
+          </GeneratorField>
+
+          <GeneratorField>
+            <GeneratorLabel>Chapter Count</GeneratorLabel>
+            <GeneratorInput
+              type="number"
+              name="chapter_count"
+              value={generatorForm.chapter_count}
+              onChange={handleGeneratorInputChange}
+              disabled={generating}
+              min="1"
+              max="20"
+            />
+          </GeneratorField>
+
+          <GeneratorField style={{ gridColumn: '1 / -1' }}>
+            <GeneratorLabel>Plot Outline (Optional)</GeneratorLabel>
+            <GeneratorTextarea
+              name="plot_outline"
+              value={generatorForm.plot_outline}
+              onChange={handleGeneratorInputChange}
+              disabled={generating}
+              placeholder="Describe the main plot, key events, or story direction you want..."
+            />
+          </GeneratorField>
+        </GeneratorForm>
+
+        <GenerateButton
+          onClick={generateManhwa}
+          disabled={generating}
+        >
+          {generating ? 'Generating...' : '✨ Generate Complete Manhwa'}
+        </GenerateButton>
+
+        {generating && (
+          <GenerationProgress>
+            <ProgressText>{generationStatus}</ProgressText>
+            <ProgressBar>
+              <ProgressFill $progress={generationProgress} />
+            </ProgressBar>
+            <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>
+              {generationProgress}% Complete
+            </div>
+          </GenerationProgress>
+        )}
+
+        {generatedResult && (
+          <GeneratedResult>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <ResultTitle>Generated Manhwa</ResultTitle>
+              <Button onClick={downloadGeneratedContent} style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}>
+                📥 Download JSON
+              </Button>
+            </div>
+            
+            {generatedResult.story && (
+              <div style={{ marginBottom: '1.5rem' }}>
+                <h4 style={{ color: 'inherit', margin: '0 0 0.5rem 0' }}>Story: {generatedResult.story.title}</h4>
+                <p style={{ margin: '0 0 1rem 0', color: 'rgba(255,255,255,0.8)' }}>
+                  <strong>Genre:</strong> {generatedResult.story.genre} | <strong>Setting:</strong> {generatedResult.story.setting}
+                </p>
+                <ResultContent>{generatedResult.story.synopsis || generatedResult.story.full_content}</ResultContent>
+              </div>
+            )}
+
+            {generatedResult.cover_art && (
+              <div style={{ marginBottom: '1.5rem' }}>
+                <h4 style={{ color: 'inherit', margin: '0 0 0.5rem 0' }}>Cover Art</h4>
+                <ImagePreview 
+                  src={`data:image/png;base64,${generatedResult.cover_art.image_base64}`} 
+                  alt="Generated cover art" 
+                />
+                <p style={{ fontSize: '0.8rem', opacity: 0.7, margin: '0.5rem 0 0 0' }}>
+                  Prompt: {generatedResult.cover_art.prompt}
+                </p>
+              </div>
+            )}
+
+            {generatedResult.character_art && (
+              <div style={{ marginBottom: '1.5rem' }}>
+                <h4 style={{ color: 'inherit', margin: '0 0 0.5rem 0' }}>Character Art</h4>
+                <ImagePreview 
+                  src={`data:image/png;base64,${generatedResult.character_art.image_base64}`} 
+                  alt="Generated character art" 
+                />
+                <p style={{ fontSize: '0.8rem', opacity: 0.7, margin: '0.5rem 0 0 0' }}>
+                  Prompt: {generatedResult.character_art.prompt}
+                </p>
+              </div>
+            )}
+
+            {generatedResult.storage_error && (
+              <div style={{ 
+                background: 'rgba(255, 193, 7, 0.1)', 
+                border: '1px solid rgba(255, 193, 7, 0.3)',
+                borderRadius: '8px',
+                padding: '1rem',
+                marginTop: '1rem',
+                fontSize: '0.9rem'
+              }}>
+                ⚠️ <strong>Note:</strong> Content generated successfully but not stored permanently ({generatedResult.storage_error}). 
+                Use the Download button to save this content.
+              </div>
+            )}
+          </GeneratedResult>
+        )}
+      </GeneratorSection>
 
       <SearchSection>
         <SearchContainer>
