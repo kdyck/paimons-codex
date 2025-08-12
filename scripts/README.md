@@ -26,6 +26,8 @@ Start all or specific services in the development environment.
 - `oracle-db` - Oracle 23ai database with vector search
 - `caddy` - Caddy reverse proxy
 - `minio` - MinIO object storage (auto-configured on startup)
+- `ollama` - Ollama LLM service (AI text generation)
+- `stable-diffusion` - Stable Diffusion service (AI image generation)
 
 ### 🛑 `stop.sh` - Stop Services
 Stop all or specific services.
@@ -61,6 +63,18 @@ Completely clean the development environment, removing all containers, images, a
 ```
 
 ⚠️ **WARNING:** This will delete all database data and vector embeddings! Use with caution.
+
+### 🎮 `setup-gpu.sh` - GPU Setup (WSL2 + NVIDIA)
+Setup GPU support for Podman in WSL2 with NVIDIA GPU acceleration. One-time setup required for AI models.
+
+```bash
+./scripts/setup-gpu.sh
+```
+
+**Requirements:**
+- WSL2 with NVIDIA GPU support
+- NVIDIA drivers installed on Windows host
+- Enables GPU acceleration for Ollama and Stable Diffusion
 
 ### 🔧 `podman-setup.sh` - Setup Podman
 Initialize the Podman environment for the project.
@@ -106,15 +120,18 @@ Upload specific manhwa assets to MinIO bucket. Cleaner interface than calling th
 
 ### Full Development Setup
 ```bash
+# GPU setup (one-time, if you have NVIDIA GPU in WSL2)
+./scripts/setup-gpu.sh
+
 # Initial setup
 ./scripts/podman-setup.sh
-./scripts/start.sh
-
-# Initialize MinIO bucket
-./scripts/init-minio-bucket.sh
+./scripts/clean.sh
+./scripts/start.sh  # Automatically: initializes MinIO bucket, pulls llama3.2 if needed
 
 # Upload manhwa assets
 ./scripts/upload-manhwa-assets.sh no-more-princes
+# Or use Python script directly:
+python scripts/upload_assets.py
 
 # Seed database (optional)
 python scripts/seed-data.py
@@ -212,6 +229,8 @@ Default ports:
 - **9000** - MinIO API
 - **9001** - MinIO Console (Web UI)
 - **8080/8443** - Caddy proxy
+- **11434** - Ollama API (AI text generation)
+- **7860** - Stable Diffusion API (AI image generation)
 
 ### Permission Issues
 ```bash
