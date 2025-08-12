@@ -1,4 +1,4 @@
-# 🎭 LoRA Training Setup Guide - Paimon's Codex
+podman # 🎭 LoRA Training Setup Guide - Paimon's Codex
 
 Comprehensive guide for setting up Character + Style LoRA training with your manhwa content.
 

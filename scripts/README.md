@@ -56,13 +56,31 @@ Stop all or specific services.
 - `--volumes` - Also remove volumes (⚠️ **WARNING:** This deletes all data!)
 
 ### 🧹 `clean.sh` - Clean Environment
-Completely clean the development environment, removing all containers, images, and data.
+Completely clean the development environment, removing containers and selective volumes.
 
 ```bash
+# Interactive cleanup (prompts for confirmation)
 ./scripts/clean.sh
+
+# Force cleanup without prompts
+./scripts/clean.sh -y
 ```
 
-⚠️ **WARNING:** This will delete all database data and vector embeddings! Use with caution.
+⚠️ **WARNING:** This will delete database data and most volumes, but preserves:
+- `paimons-codex_minio_data` - MinIO object storage data
+- `paimons-codex_ollama_models` - Downloaded LLM models  
+- `paimons-codex_sd_models` - Stable Diffusion model files
+
+**What gets cleaned:**
+- All running containers
+- Database volumes (Oracle data)
+- Temporary volumes and networks
+- Unused images and containers
+
+**What stays preserved:**
+- Your uploaded images and assets in MinIO
+- Downloaded AI models (saves re-download time)
+- Custom model files
 
 ### 🎮 `setup-gpu.sh` - GPU Setup (WSL2 + NVIDIA)
 Setup GPU support for Podman in WSL2 with NVIDIA GPU acceleration. One-time setup required for AI models.
