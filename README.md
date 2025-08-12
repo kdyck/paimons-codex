@@ -1,6 +1,6 @@
 # 📚 Paimon's Codex
 
-An AI-powered manhwa creation and discovery platform. Generate complete manhwa stories with AI text generation and stunning artwork using Stable Diffusion, all backed by Oracle 23ai vector search and modern web technologies.
+An AI-powered manhwa creation and discovery platform designed for local development and experimentation. Generate complete manhwa stories with AI text generation and stunning artwork using Stable Diffusion, all backed by Oracle 23ai vector search and modern web technologies.
 
 ## 🚀 Key Features
 
@@ -239,17 +239,29 @@ The platform provides 30+ REST endpoints across 5 main categories:
 
 ## 🚦 Environment Management
 
-### Development
+### Local Development
 ```bash
 ./scripts/start.sh    # Start development environment
 ./scripts/stop.sh     # Stop all services
 ```
 
-### Production Deployment
-1. Update environment variables for production
-2. Configure domain in Caddyfile
-3. Set up proper secrets management
-4. Enable monitoring and backups
+### Production Deployment Considerations
+
+⚠️ **This setup is designed for local development**. For production deployment, consider:
+
+**Recommended Changes:**
+- **Object Storage**: Replace MinIO with OCI Object Storage (simpler licensing)
+- **Database**: Use managed Oracle Cloud Database or Oracle Autonomous Database  
+- **Container Platform**: Deploy to OCI Container Instances or Kubernetes
+- **Security**: Implement proper authentication, HTTPS certificates, and secrets management
+- **Monitoring**: Add logging, metrics, and health monitoring
+- **Scaling**: Use managed services for high availability
+
+**Benefits of Managed Services:**
+- Simplified licensing (no AGPL concerns)
+- Better security and compliance
+- Automatic scaling and backups
+- Professional support
 
 ### Clean Reset
 ```bash
@@ -275,6 +287,20 @@ For issues and questions:
 2. Verify service health: `podman-compose ps`
 3. Review configuration files
 4. Open an issue with detailed information
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+**Third-Party Services**: This project uses several third-party services (MinIO, Oracle, AI models) with their own licensing terms. See [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) for complete licensing information.
+
+## 🙏 Acknowledgments
+
+- **Oracle 23ai** for advanced vector search capabilities
+- **Stability AI** for Stable Diffusion models
+- **Meta AI** for Llama language models
+- **FastAPI** and **React** communities for excellent frameworks
+- **Podman/Docker** for containerization technology
 
 ---
 
