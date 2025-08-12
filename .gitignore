@@ -92,3 +92,4 @@ dmypy.json
 /lora-training/
 /training-data/
 /sd-service/training-data/
+train_*.sh
