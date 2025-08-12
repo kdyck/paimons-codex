@@ -126,8 +126,8 @@ The system employs a parallel AI processing approach:
 ### AI Service Communication
 ```python
 # Service Discovery via Environment Variables
-OLLAMA_BASE_URL = "http://10.89.0.4:11434"
-SD_API_URL = "http://10.89.0.5:7860"
+OLLAMA_BASE_URL = "http://ollama:11434"
+SD_API_URL = "http://stable-diffusion:7860"
 
 # Health Check Integration
 async def check_ai_services():
@@ -188,12 +188,12 @@ codex/                          # MinIO bucket
 
 ### Internal Service Communication
 ```
-Container Network (10.89.0.x):
-├── API Gateway     → 10.89.0.2:8000
-├── MinIO          → 10.89.0.3:9000
-├── Ollama         → 10.89.0.4:11434
-├── Stable Diff    → 10.89.0.5:7860
-└── Oracle         → 10.89.0.6:1521
+Container Network (Internal):
+├── API Gateway     → api:8000
+├── MinIO          → minio:9000
+├── Ollama         → ollama:11434
+├── Stable Diff    → stable-diffusion:7860
+└── Oracle         → oracle-db:1521
 ```
 
 ### External Access Points

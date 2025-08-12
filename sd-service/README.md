@@ -195,7 +195,7 @@ podman-compose restart stable-diffusion
 ## 🔗 Integration
 
 This service integrates with the main Paimon's Codex API:
-- **API Service** connects via `SD_API_URL=http://10.89.0.5:7860`
+- **API Service** connects via `SD_API_URL=http://stable-diffusion:7860`
 - **Health checks** verify service availability before generation
 - **Error handling** provides placeholder images when service unavailable
 

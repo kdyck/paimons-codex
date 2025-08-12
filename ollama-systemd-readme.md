@@ -182,7 +182,7 @@ WSL2 is NAT’d; use **Windows portproxy** to forward a Windows port to WSL.
 
    New-NetFirewallRule -DisplayName "Ollama 11434 LAN" `
      -Direction Inbound -Action Allow -Protocol TCP -LocalPort 11434 `
-     -RemoteAddress 192.168.1.0/24
+     -RemoteAddress 192.168.x.x/16
    ```
 3) From another device on your network:
    ```
