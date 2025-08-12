@@ -6,6 +6,15 @@ import logging
 import asyncio
 from PIL import Image, ImageDraw, ImageFont
 from .sd_client import get_sd_client
+# Import shared prompt builder (fallback if not available)
+try:
+    import sys
+    sys.path.append('/app')
+    from shared.prompt_builder import ManhwaPromptBuilder
+    PROMPT_BUILDER_AVAILABLE = True
+except ImportError:
+    logging.warning("Shared prompt builder not available - using local prompts")
+    PROMPT_BUILDER_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -46,40 +55,31 @@ class ImageGenerationService:
         return ((value + 7) // 8) * 8
 
     # ----------------------------- Prompting ---------------------------------
-    def build_prompts(self, prompt: str, style: str = "anime") -> Tuple[str, str]:
-        style_prompts = {
-            "anime": "anime style, manga art, cel-shaded, clean lines, vibrant colors",
-            "realistic": "realistic, detailed, photorealistic, high quality", 
-            "chibi": "chibi style, cute, kawaii, simple, rounded features",
-        }
-        
-        # Cardinality cues to prevent multiple subjects/faces
-        cardinality_cues = "solo, single subject, 1person, portrait, single character"
-        
-        # Determine gender-specific cues from prompt
-        gender_cues = ""
-        prompt_lower = prompt.lower()
-        if any(word in prompt_lower for word in ["girl", "woman", "female", "she", "her"]):
-            gender_cues = "1girl"
-        elif any(word in prompt_lower for word in ["boy", "man", "male", "he", "him"]):
-            gender_cues = "1boy"
+    def build_prompts(self, prompt: str, style: str = "anime") -> tuple:
+        """Build prompts using shared builder or fallback."""
+        if PROMPT_BUILDER_AVAILABLE:
+            return ManhwaPromptBuilder.build_prompts(prompt, style)
         else:
-            gender_cues = "1person"  # Gender neutral
-        
-        manhwa = "manhwa style, webtoon style, korean comic art, digital art, beautiful composition, dramatic lighting"
-        
-        # Build prompt with cardinality cues first (highest priority)
-        positive = f"{cardinality_cues}, {gender_cues}, {prompt}, {style_prompts.get(style, style_prompts['anime'])}, {manhwa}"
-        
-        negative = (
-            "lowres, blurry, jpeg artifacts, watermark, text, signature, bad anatomy, "
-            "bad proportions, extra fingers, extra limbs, missing limbs, deformed, worst quality, "
-            "multiple faces, two faces, double face, duplicate, mutated hands, poorly drawn hands, "
-            "poorly drawn face, mutation, deformed face, ugly, bad eyes, crossed eyes, "
-            "extra heads, extra arms, extra legs, malformed limbs, fused fingers, too many fingers, "
-            "long neck, mutated, bad body, bad proportions, cloned face, gross proportions"
-        )
-        return positive, negative
+            # Fallback implementation
+            style_prompts = {
+                "anime": "anime style, manga art, cel-shaded, clean lines, vibrant colors, beautiful, high quality, masterpiece, detailed, friendly, pleasant",
+                "realistic": "realistic, detailed, photorealistic, high quality, beautiful, masterpiece, pleasant, friendly, well-lit", 
+                "chibi": "chibi style, cute, kawaii, simple, rounded features, adorable, cheerful, friendly, wholesome",
+            }
+            manhwa = "manhwa style, webtoon style, korean comic art, digital art, beautiful composition, dramatic lighting"
+            positive = f"{prompt}, {style_prompts.get(style, style_prompts['anime'])}, {manhwa}"
+            
+            negative = (
+                "lowres, blurry, jpeg artifacts, watermark, text, signature, bad anatomy, "
+                "bad proportions, extra fingers, extra limbs, missing limbs, deformed, worst quality, "
+                "multiple faces, two faces, double face, duplicate, mutated hands, poorly drawn hands, "
+                "poorly drawn face, mutation, deformed face, ugly, bad eyes, crossed eyes, "
+                "extra heads, extra arms, extra legs, malformed limbs, fused fingers, too many fingers, "
+                "long neck, mutated, bad body, bad proportions, cloned face, gross proportions, "
+                "scary, horror, creepy, nightmare, dark, evil, demon, monster, zombie, gore, blood, "
+                "violence, disturbing, unsettling, menacing, sinister, grotesque, macabre"
+            )
+            return positive, negative
 
     async def _check_sd_service(self) -> bool:
         """Check if SD service is available."""
@@ -313,7 +313,10 @@ class ImageGenerationService:
             }
 
     def get_style_options(self) -> List[str]:
-        return ["anime", "realistic", "chibi"]
+        if PROMPT_BUILDER_AVAILABLE:
+            return ManhwaPromptBuilder.get_style_options()
+        else:
+            return ["anime", "realistic", "chibi"]
 
     async def cleanup(self):
         """No cleanup needed since we use the SD service."""

@@ -4,6 +4,8 @@ import base64
 from typing import Dict, Any, List, Optional, Tuple
 import logging
 import asyncio
+import sys
+sys.path.append('/app')  # Add current directory to path for shared modules
 
 # Optional deps (run without SD for placeholder mode)
 try:
@@ -27,6 +29,14 @@ except Exception as e:
     COMPEL_AVAILABLE = False
 
 from PIL import Image, ImageDraw, ImageFont
+
+# Import shared prompt builder
+try:
+    from shared.prompt_builder import ManhwaPromptBuilder
+    PROMPT_BUILDER_AVAILABLE = True
+except ImportError:
+    logging.warning("Shared prompt builder not available - using fallback")
+    PROMPT_BUILDER_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -112,19 +122,28 @@ class ImageGenerationService:
 
     # ----------------------------- Prompting ---------------------------------
     def build_prompts(self, prompt: str, style: str = "anime") -> Tuple[str, str]:
-        style_prompts = {
-            "anime": "anime style, manga art, cel-shaded, clean lines, vibrant colors",
-            "realistic": "realistic, detailed, photorealistic, high quality", 
-            "chibi": "chibi style, cute, kawaii, simple, rounded features",
-        }
-        manhwa = "manhwa style, webtoon style, korean comic art, digital art, beautiful composition, dramatic lighting"
-        positive = f"{prompt}, {style_prompts.get(style, style_prompts['anime'])}, {manhwa}"
-        
-        negative = (
-            "lowres, blurry, jpeg artifacts, watermark, text, signature, bad anatomy, "
-            "bad proportions, extra fingers, extra limbs, missing limbs, deformed, worst quality"
-        )
-        return positive, negative
+        """Build prompts using shared builder or fallback."""
+        if PROMPT_BUILDER_AVAILABLE:
+            return ManhwaPromptBuilder.build_prompts(prompt, style)
+        else:
+            # Fallback implementation
+            style_prompts = {
+                "anime": "anime style, manga art, cel-shaded, clean lines, vibrant colors, beautiful, high quality, masterpiece, detailed, friendly, pleasant",
+                "realistic": "realistic, detailed, photorealistic, high quality, beautiful, masterpiece, pleasant, friendly, well-lit", 
+                "chibi": "chibi style, cute, kawaii, simple, rounded features, adorable, cheerful, friendly, wholesome",
+            }
+            manhwa = "manhwa style, webtoon style, korean comic art, digital art, beautiful composition, dramatic lighting"
+            positive = f"{prompt}, {style_prompts.get(style, style_prompts['anime'])}, {manhwa}"
+            
+            negative = (
+                "lowres, blurry, jpeg artifacts, watermark, text, signature, bad anatomy, "
+                "bad proportions, extra fingers, extra limbs, missing limbs, deformed, worst quality, "
+                "scary, horror, creepy, nightmare, dark, evil, demon, monster, zombie, gore, blood, "
+                "violence, disturbing, unsettling, menacing, sinister, grotesque, macabre, "
+                "multiple faces, two faces, double face, duplicate, mutated hands, poorly drawn hands, "
+                "poorly drawn face, mutation, deformed face, ugly, bad eyes, crossed eyes"
+            )
+            return positive, negative
 
     def _count_tokens(self, text: str) -> int:
         """Count tokens in text using the pipeline's tokenizer"""
@@ -379,7 +398,10 @@ class ImageGenerationService:
         if lora:
             self.apply_lora(lora, lora_scale)
 
-        pos, neg = self.build_prompts(f"character portrait, {character_prompt}, full body", style)
+        if PROMPT_BUILDER_AVAILABLE:
+            pos, neg = ManhwaPromptBuilder.build_character_prompts(character_prompt, style)
+        else:
+            pos, neg = self.build_prompts(f"character portrait, {character_prompt}, full body", style)
 
         # Two-pass: generate smaller then refine to target
         base_w = self._round_to_8(max(256, int(width * 0.65)))
@@ -397,8 +419,8 @@ class ImageGenerationService:
                     negative_prompt_embeds=negative_prompt_embeds,
                     width=base_w,
                     height=base_h,
-                    num_inference_steps=25,
-                    guidance_scale=7.5,
+                    num_inference_steps=30,
+                    guidance_scale=6.5,
                     generator=self._generator(seed),
                 ).images[0]
             else:
@@ -409,8 +431,8 @@ class ImageGenerationService:
                     negative_prompt=neg,
                     width=base_w,
                     height=base_h,
-                    num_inference_steps=25,
-                    guidance_scale=7.5,
+                    num_inference_steps=30,
+                    guidance_scale=6.5,
                     generator=self._generator(seed),
                 ).images[0]
         except RuntimeError as e:
@@ -496,7 +518,10 @@ class ImageGenerationService:
         if characters:
             full_prompt = f"{scene_prompt}, featuring {', '.join(characters)}"
 
-        pos, neg = self.build_prompts(f"scene illustration, {full_prompt}, cinematic composition", style)
+        if PROMPT_BUILDER_AVAILABLE:
+            pos, neg = ManhwaPromptBuilder.build_scene_prompts(scene_prompt, characters, style)
+        else:
+            pos, neg = self.build_prompts(f"scene illustration, {full_prompt}, cinematic composition", style)
 
         base_w = self._round_to_8(max(256, int(width * 0.65)))
         base_h = self._round_to_8(max(256, int(height * 0.65)))
@@ -593,13 +618,16 @@ class ImageGenerationService:
         if lora:
             self.apply_lora(lora, lora_scale)
 
-        cover_prompt = (
-            f"manhwa cover art, {title}, {genre} theme, featuring {main_character}, "
-            f"dramatic composition, title design, professional book cover"
-        )
-        pos, neg = self.build_prompts(cover_prompt + ", no lettering, no text", style)
-        # Strongly suppress accidental text
-        neg = neg + ", letters, words, text, watermark"
+        if PROMPT_BUILDER_AVAILABLE:
+            pos, neg = ManhwaPromptBuilder.build_cover_prompts(title, genre, main_character, style)
+        else:
+            cover_prompt = (
+                f"manhwa cover art, {title}, {genre} theme, featuring {main_character}, "
+                f"dramatic composition, title design, professional book cover"
+            )
+            pos, neg = self.build_prompts(cover_prompt + ", no lettering, no text", style)
+            # Strongly suppress accidental text
+            neg = neg + ", letters, words, text, watermark"
 
         base_w = self._round_to_8(max(256, int(width * 0.65)))
         base_h = self._round_to_8(max(256, int(height * 0.65)))
@@ -666,7 +694,10 @@ class ImageGenerationService:
         }
 
     def get_style_options(self) -> List[str]:
-        return list(self.manhwa_style_models.keys())
+        if PROMPT_BUILDER_AVAILABLE:
+            return ManhwaPromptBuilder.get_style_options()
+        else:
+            return list(self.manhwa_style_models.keys())
 
     async def cleanup(self):
         if self.pipeline:
