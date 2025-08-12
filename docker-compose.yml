@@ -138,6 +138,8 @@ services:
       - "127.0.0.1:7860:7860"
     volumes:
       - sd_models:/models
+      - ./lora-training:/lora-training
+      - ./sd-service:/app
     devices:
       - nvidia.com/gpu=all
     restart: unless-stopped

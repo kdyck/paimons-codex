@@ -52,12 +52,32 @@ class ImageGenerationService:
             "realistic": "realistic, detailed, photorealistic, high quality", 
             "chibi": "chibi style, cute, kawaii, simple, rounded features",
         }
+        
+        # Cardinality cues to prevent multiple subjects/faces
+        cardinality_cues = "solo, single subject, 1person, portrait, single character"
+        
+        # Determine gender-specific cues from prompt
+        gender_cues = ""
+        prompt_lower = prompt.lower()
+        if any(word in prompt_lower for word in ["girl", "woman", "female", "she", "her"]):
+            gender_cues = "1girl"
+        elif any(word in prompt_lower for word in ["boy", "man", "male", "he", "him"]):
+            gender_cues = "1boy"
+        else:
+            gender_cues = "1person"  # Gender neutral
+        
         manhwa = "manhwa style, webtoon style, korean comic art, digital art, beautiful composition, dramatic lighting"
-        positive = f"{prompt}, {style_prompts.get(style, style_prompts['anime'])}, {manhwa}"
+        
+        # Build prompt with cardinality cues first (highest priority)
+        positive = f"{cardinality_cues}, {gender_cues}, {prompt}, {style_prompts.get(style, style_prompts['anime'])}, {manhwa}"
         
         negative = (
             "lowres, blurry, jpeg artifacts, watermark, text, signature, bad anatomy, "
-            "bad proportions, extra fingers, extra limbs, missing limbs, deformed, worst quality"
+            "bad proportions, extra fingers, extra limbs, missing limbs, deformed, worst quality, "
+            "multiple faces, two faces, double face, duplicate, mutated hands, poorly drawn hands, "
+            "poorly drawn face, mutation, deformed face, ugly, bad eyes, crossed eyes, "
+            "extra heads, extra arms, extra legs, malformed limbs, fused fingers, too many fingers, "
+            "long neck, mutated, bad body, bad proportions, cloned face, gross proportions"
         )
         return positive, negative
 

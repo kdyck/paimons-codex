@@ -5,8 +5,15 @@ from typing import Dict, Any, List, Optional, Tuple
 import logging
 import asyncio
 import uvicorn
+import warnings
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from contextlib import asynccontextmanager
+
+# Suppress deprecation warnings for cleaner logs
+warnings.filterwarnings("ignore", category=FutureWarning, module="transformers")
+warnings.filterwarnings("ignore", category=FutureWarning, module="diffusers")
+warnings.filterwarnings("ignore", category=DeprecationWarning, module="fastapi")
 
 # Optional deps (run without SD for placeholder mode)
 try:
@@ -33,10 +40,49 @@ from PIL import Image, ImageDraw, ImageFont
 
 logger = logging.getLogger(__name__)
 
-# FastAPI app
-app = FastAPI(title="Manhwa Image Generation Service", version="1.0.0")
+# Global service instance
+image_service = None
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Manage service lifecycle"""
+    global image_service
+    
+    # Startup
+    logger.info("🎨 Starting Manhwa Image Generation Service...")
+    setup_models_on_startup()
+    image_service = ImageGenerationService()
+    logger.info("✅ Manhwa Image Generation Service ready")
+    
+    yield
+    
+    # Shutdown
+    if image_service:
+        await image_service.cleanup()
+    logger.info("🛑 Manhwa Image Generation Service shut down")
+
+# FastAPI app with lifespan handler
+app = FastAPI(
+    title="Manhwa Image Generation Service", 
+    version="1.0.0",
+    lifespan=lifespan
+)
 
 from image_generation_service import ImageGenerationService
+
+# Auto-setup models on startup
+def setup_models_on_startup():
+    """Setup manhwa models on service startup"""
+    try:
+        from load_manhwa_models import create_model_config
+        logger.info("🎨 Setting up manhwa generation models...")
+        create_model_config()
+        logger.info("✅ Manhwa model configuration ready")
+    except Exception as e:
+        logger.warning(f"Model setup failed (will use defaults): {e}")
+
+# Initialize on startup
+setup_models_on_startup()
 
 # Pydantic models
 class CharacterRequest(BaseModel):
@@ -78,18 +124,7 @@ class CoverRequest(BaseModel):
 # Global service instance
 image_service = None
 
-@app.on_event("startup")
-async def startup_event():
-    global image_service
-    image_service = ImageGenerationService()
-    logger.info("Manhwa Image Generation Service started")
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    global image_service
-    if image_service:
-        await image_service.cleanup()
-    logger.info("Manhwa Image Generation Service shut down")
+# Startup/shutdown now handled by lifespan context manager
 
 @app.get("/")
 async def root():
