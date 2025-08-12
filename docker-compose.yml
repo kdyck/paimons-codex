@@ -28,27 +28,27 @@ services:
       dockerfile: Dockerfile
     container_name: paimons-api
     depends_on:
-      - minio
-      - ollama
+      minio: {}
+      ollama: {}
+      stable-diffusion: {}
     environment:
       - ORACLE_USER=paimons_user
       - ORACLE_PASSWORD=password123
       - ORACLE_DSN=oracle-db:1521/FREEPDB1
       - PYTHONPATH=/app
-      - ORACLE_SKIP=true
+      - ORACLE_SKIP=false
+      - ORACLE_LIB_DIR=/opt/oracle/instantclient_21_13
       - MINIO_ENDPOINT=10.89.0.3:9000
       - MINIO_ACCESS_KEY=paimons
       - MINIO_SECRET_KEY=paimons123
       - MINIO_BUCKET_NAME=codex
       - OLLAMA_BASE_URL=http://10.89.0.4:11434
+      - SD_API_URL=http://10.89.0.5:7860
     ports:
       - "127.0.0.1:8000:8000"
     volumes:
       - ./api:/app
       - ./dal:/app/dal
-    # depends_on:
-    #   oracle-db:
-    #     condition: service_healthy
     restart: unless-stopped
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
@@ -121,6 +121,25 @@ services:
       - "127.0.0.1:11434:11434"
     volumes:
       - ollama_models:/root/.ollama
+    devices:
+      - nvidia.com/gpu=all
+    restart: unless-stopped
+
+  # Stable Diffusion Service
+  stable-diffusion:
+    build:
+      context: ./sd-service
+      dockerfile: Dockerfile
+    container_name: paimons-sd
+    environment:
+      - PYTHONUNBUFFERED=1
+      - HF_HOME=/models
+    ports:
+      - "127.0.0.1:7860:7860"
+    volumes:
+      - sd_models:/models
+    devices:
+      - nvidia.com/gpu=all
     restart: unless-stopped
 
 volumes:
@@ -129,3 +148,4 @@ volumes:
   caddy_config:
   minio_data:
   ollama_models:
+  sd_models:

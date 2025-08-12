@@ -7,13 +7,13 @@ show_usage() {
     echo "Usage: $0 [service1] [service2] ..."
     echo ""
     echo "Available services:"
-    echo "  api        - FastAPI backend service"
-    echo "  ui         - React frontend service"
-    echo "  oracle-db  - Oracle 23ai database with vector search"
-    echo "  caddy      - Caddy reverse proxy"
-    echo "  minio      - MinIO object storage"
-    echo "  minio      - MinIO object storage"
-    echo "  ollama     - Ollama LLM server"
+    echo "  api               - FastAPI backend service"
+    echo "  ui                - React frontend service"
+    echo "  oracle-db         - Oracle 23ai database with vector search"
+    echo "  caddy             - Caddy reverse proxy"
+    echo "  minio             - MinIO object storage"
+    echo "  ollama            - Ollama LLM server"
+    echo "  stable-diffusion  - Stable Diffusion image generation service"
     echo ""
     echo "Examples:"
     echo "  $0           # Start all services"
@@ -89,17 +89,12 @@ echo "🪣 Initializing MinIO bucket..."
 echo ""
 echo "🦙 Checking Ollama models..."
 if curl -s http://127.0.0.1:11434/api/tags | grep -q '"models":\[]'; then
-    echo "📥 No models found, attempting to pull llama3..."
-    if ollama pull llama3; then
-        echo "✅ llama3 model ready"
+    echo "📥 No models found, pulling llama3.2..."
+    if podman exec paimons-ollama ollama pull llama3.2; then
+        echo "✅ llama3.2 model ready"
     else
-        echo "⚠️  llama3 failed, falling back to llama3.2..."
-        if ollama pull llama3.2; then
-            echo "✅ llama3.2 model ready"
-        else
-            echo "❌ Failed to pull both llama3 and llama3.2 models"
-            echo "You may need to manually run: ollama pull llama3.2"
-        fi
+        echo "❌ Failed to pull llama3.2 model"
+        echo "You may need to manually run: podman exec paimons-ollama ollama pull llama3.2"
     fi
 else
     echo "✅ Ollama models already available"
@@ -113,6 +108,7 @@ echo "🔧 API: http://localhost:8000"
 echo "📊 API Docs: http://localhost:8000/docs"
 echo "🤖 AI Chat: Available via chat button in frontend"
 echo "🦙 Ollama API: http://localhost:11434 (if started)"
+echo "🎨 Stable Diffusion API: http://localhost:7860 (if started)"
 echo "🗂️  MinIO Console: http://localhost:9001 (paimons/paimons123)"
 echo "📦 MinIO API: http://localhost:9000"
 echo ""

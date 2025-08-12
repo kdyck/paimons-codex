@@ -1,9 +1,12 @@
 # Python cache
-__pycache__/
+__pycache__
+**/__pycache__
 *.py[cod]
 *$py.class
 *.so
 .Python
+**/*.pyc
+**/*.pyo
 
 # Node.js (if any)
 node_modules/

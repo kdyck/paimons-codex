@@ -7,12 +7,13 @@ show_usage() {
     echo "Usage: $0 [service1] [service2] ..."
     echo ""
     echo "Available services:"
-    echo "  api        - FastAPI backend service"
-    echo "  ui         - React frontend service"
-    echo "  oracle-db  - Oracle 23ai database with vector search"
-    echo "  caddy      - Caddy reverse proxy"
-    echo "  minio      - MinIO object storage"
-    echo "  ollama     - Ollama LLM server"
+    echo "  api               - FastAPI backend service"
+    echo "  ui                - React frontend service"
+    echo "  oracle-db         - Oracle 23ai database with vector search"
+    echo "  caddy             - Caddy reverse proxy"
+    echo "  minio             - MinIO object storage"
+    echo "  ollama            - Ollama LLM server"
+    echo "  stable-diffusion  - Stable Diffusion image generation service"
     echo ""
     echo "Examples:"
     echo "  $0           # Stop all services"
@@ -44,7 +45,7 @@ for arg in "$@"; do
         --volumes)
             REMOVE_VOLUMES=true
             ;;
-        api|ui|oracle-db|caddy|minio|ollama)
+        api|ui|oracle-db|caddy|minio|ollama|stable-diffusion)
             TARGET_SERVICES="$TARGET_SERVICES $arg"
             ;;
         *)
@@ -65,7 +66,7 @@ if [ -z "$TARGET_SERVICES" ]; then
         echo "🗑️  Stopping and removing all containers..."
         podman-compose down
         # Remove all project containers
-        podman rm -f paimons-api paimons-ui paimons-oracle paimons-caddy paimons-minio paimons-ollama 2>/dev/null || true
+        podman rm -f paimons-api paimons-ui paimons-oracle paimons-caddy paimons-minio paimons-ollama paimons-sd 2>/dev/null || true
     else
         podman-compose down
     fi
@@ -85,6 +86,8 @@ else
             container_name="paimons-${service}"
             if [ "$service" = "oracle-db" ]; then
                 container_name="paimons-oracle"
+            elif [ "$service" = "stable-diffusion" ]; then
+                container_name="paimons-sd"
             fi
             podman rm -f $container_name 2>/dev/null || echo "Container $container_name not found or already removed"
         done

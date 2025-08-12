@@ -175,3 +175,20 @@ class MinIOClient:
             return True
         except S3Error:
             return False
+
+# Global MinIO client instance
+_minio_client: Optional[MinIOClient] = None
+
+def get_minio_client() -> Optional[Minio]:
+    """Get the global MinIO client instance"""
+    global _minio_client
+    
+    if _minio_client is None:
+        try:
+            _minio_client = MinIOClient()
+            return _minio_client.client
+        except Exception as e:
+            print(f"Failed to initialize MinIO client: {e}")
+            return None
+    
+    return _minio_client.client if _minio_client._initialized else None

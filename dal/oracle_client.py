@@ -12,13 +12,19 @@ class OracleClient:
             'user': os.getenv('ORACLE_USER', 'paimons_user'),
             'password': os.getenv('ORACLE_PASSWORD', 'password123'),
             'dsn': os.getenv('ORACLE_DSN', 'localhost:1521/FREEPDB1'),
-            'config_dir': os.getenv('ORACLE_CONFIG_DIR', '/opt/oracle/instantclient_21_8/network/admin'),
-            'wallet_location': os.getenv('ORACLE_WALLET_LOCATION', '/opt/oracle/instantclient_21_8/network/admin'),
+            'config_dir': os.getenv('ORACLE_CONFIG_DIR', '/opt/oracle/instantclient_21_13/network/admin'),
+            'wallet_location': os.getenv('ORACLE_WALLET_LOCATION', '/opt/oracle/instantclient_21_13/network/admin'),
         }
         
-        # Initialize Oracle client
+        # Initialize Oracle client with library path
         try:
-            oracledb.init_oracle_client()
+            lib_dir = os.getenv('ORACLE_LIB_DIR', '/opt/oracle/instantclient_21_13')
+            if os.path.exists(lib_dir):
+                oracledb.init_oracle_client(lib_dir=lib_dir)
+                print(f"Oracle client initialized with lib_dir: {lib_dir}")
+            else:
+                oracledb.init_oracle_client()
+                print("Oracle client initialized without explicit lib_dir")
         except Exception as e:
             print(f"Oracle client initialization warning: {e}")
             print("Note: Oracle features will be limited without proper client setup")
