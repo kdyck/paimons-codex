@@ -90,3 +90,4 @@ caddy_config/
 dmypy.json
 /no-more-princes.json
 /lora-training/
+/training-data/
