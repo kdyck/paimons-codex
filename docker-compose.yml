@@ -125,7 +125,7 @@ services:
       - nvidia.com/gpu=all
     restart: unless-stopped
 
-  # Stable Diffusion Service
+  # Stable Diffusion Service  
   stable-diffusion:
     build:
       context: ./sd-service
@@ -133,15 +133,37 @@ services:
     container_name: paimons-sd
     environment:
       - PYTHONUNBUFFERED=1
-      - HF_HOME=/models
+      # NVMe SSD paths for maximum performance
+      - HF_HOME=/nvme-models
+      - CUDA_VISIBLE_DEVICES=0
+      - PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512
+      - TORCH_CUDNN_V8_API_ENABLED=1
+      # SSD-optimized cache directories 
+      - TRANSFORMERS_CACHE=/nvme-models/transformers
+      - HF_DATASETS_CACHE=/nvme-models/datasets
+      - DIFFUSERS_CACHE=/nvme-models/diffusers
+      - HF_MODELS_CACHE=/nvme-models/hub
+      # Output directory on fast SSD
+      - SD_OUTPUT_DIR=/nvme-outputs
+      - SD_TEMP_DIR=/nvme-temp
+      # Enable SSD optimizations
+      - PYTORCH_JIT_USE_NNC_NOT_NVFUSER=1
     ports:
       - "127.0.0.1:7860:7860"
     volumes:
-      - sd_models:/models
+      # Map to NVMe SSD drives D: and E: via Windows paths
+      - /mnt/d/sd-models:/nvme-models
+      - /mnt/d/sd-outputs:/nvme-outputs  
+      - /mnt/d/sd-temp:/nvme-temp
       - ./lora-training:/lora-training
       - ./sd-service:/app
     devices:
       - nvidia.com/gpu=all
+    # Increase shared memory for large batch processing  
+    shm_size: 8gb
+    # Memory limits for your 128GB setup
+    mem_limit: 32g
+    memswap_limit: 32g
     restart: unless-stopped
 
 volumes:
@@ -150,4 +172,4 @@ volumes:
   caddy_config:
   minio_data:
   ollama_models:
-  sd_models:
+  # sd_models: # Removed - now using direct NVMe SSD mapping

@@ -15,7 +15,7 @@ def setup_lora_training():
     
     # Training configuration optimized for RTX 3090
     config = {
-        "pretrained_model": "runwayml/stable-diffusion-v1-5",
+        "pretrained_model": "xyn-ai/anything-v4.0",
         "resolution": 768,  # Higher res for better manhwa detail
         "batch_size": 2,    # RTX 3090 can handle this
         "gradient_accumulation_steps": 2,

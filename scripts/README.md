@@ -144,7 +144,7 @@ Upload specific manhwa assets to MinIO bucket. Cleaner interface than calling th
 # Initial setup
 ./scripts/podman-setup.sh
 ./scripts/clean.sh
-./scripts/start.sh  # Automatically: initializes MinIO bucket, pulls llama3.2 if needed
+./scripts/start.sh  # Automatically: initializes MinIO bucket, pulls mistral if needed
 
 # Upload manhwa assets
 ./scripts/upload-manhwa-assets.sh no-more-princes

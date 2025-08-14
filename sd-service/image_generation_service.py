@@ -59,6 +59,14 @@ class ImageGenerationService:
         self._i2i = None  # lazily built img2img pipeline from base pipe
         self._compel = None  # Compel for long prompt weighting
         self._lock = asyncio.Lock()
+        
+        # Model cache for 24GB VRAM - keep multiple models loaded
+        self._model_cache = {}  # Dict[str, pipeline] 
+        self._cache_size_limit = 3  # Keep up to 3 models in VRAM simultaneously
+        
+        # Preload queue for popular models
+        self._preload_queue = []
+        self._preload_lock = asyncio.Lock()
 
         if not STABLE_DIFFUSION_AVAILABLE:
             self.device = "cpu"
@@ -69,17 +77,82 @@ class ImageGenerationService:
 
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
-        # Default HF models (you can override with safetensors paths)
-        self.model_id = "runwayml/stable-diffusion-v1-5"
+        # Manhwa-optimized models hierarchy: Anything v4.0 -> Counterfeit v3.0 -> SD v1.5
+        self.model_id = "xyn-ai/anything-v4.0"  # Default: Anything v4.0 (best for anime/manhwa)
+        self.fallback_models = [
+            "stabilityai/stable-diffusion-2-1",       # Fallback: SD 2.1 (reliable)
+            "runwayml/stable-diffusion-v1-5"          # Last resort: SD v1.5
+        ]
         self.manhwa_style_models = {
-            "anime": "runwayml/stable-diffusion-v1-5",
-            "realistic": "stabilityai/stable-diffusion-2-1",
-            "chibi": "runwayml/stable-diffusion-v1-5",
+            "anime": "xyn-ai/anything-v4.0",           # Anything v4.0 - best for anime/manhwa
+            "realistic": "stabilityai/stable-diffusion-2-1", # SD 2.1 - good for realistic manhwa
+            "chibi": "xyn-ai/anything-v4.0",           # Anything v4.0 - good for chibi style
+            "manhwa": "xyn-ai/anything-v4.0",          # Dedicated manhwa style
+            "webtoon": "xyn-ai/anything-v4.0",         # Korean webtoon style
+            # SDXL models for high-res generation
+            "sdxl": "stabilityai/stable-diffusion-xl-base-1.0",
+            "anime-xl": "cagliostrolab/animagine-xl-3.1",
+            # Fallback options
+            "sd15": "runwayml/stable-diffusion-v1-5",  # Explicit SD v1.5 option
         }
         self.loaded_style: Optional[str] = None
         self.loaded_model_id: Optional[str] = None
-
+        
         logger.info(f"ImageGenerationService initialized on device: {self.device}")
+        
+        # SSD-optimized paths
+        self.output_dir = os.getenv("SD_OUTPUT_DIR", "/nvme-outputs")
+        self.temp_dir = os.getenv("SD_TEMP_DIR", "/nvme-temp") 
+        self.model_cache_dir = os.getenv("HF_HOME", "/nvme-models")
+        
+        # Ensure SSD directories exist
+        self._ensure_ssd_directories()
+        
+        # Start preloading popular models in background
+        if self.device == "cuda":
+            asyncio.create_task(self._preload_popular_models())
+
+    # ----------------------------- SSD Utilities -----------------------------
+    def _ensure_ssd_directories(self):
+        """Ensure NVMe SSD directories exist with proper permissions."""
+        try:
+            import stat
+            dirs_to_create = [
+                self.output_dir,
+                self.temp_dir,
+                self.model_cache_dir,
+                f"{self.model_cache_dir}/transformers",
+                f"{self.model_cache_dir}/diffusers", 
+                f"{self.model_cache_dir}/datasets",
+                f"{self.model_cache_dir}/hub",
+            ]
+            
+            for directory in dirs_to_create:
+                os.makedirs(directory, exist_ok=True)
+                # Set permissions for fast access
+                try:
+                    os.chmod(directory, stat.S_IRWXU | stat.S_IRWXG | stat.S_IROTH | stat.S_IXOTH)
+                except Exception:
+                    pass  # Permission changes may fail in containers
+                    
+            logger.info(f"🚀 NVMe SSD directories configured:")
+            logger.info(f"   Models: {self.model_cache_dir}")
+            logger.info(f"   Outputs: {self.output_dir}")
+            logger.info(f"   Temp: {self.temp_dir}")
+            
+        except Exception as e:
+            logger.warning(f"SSD directory setup failed: {e}")
+    
+    def save_image_to_ssd(self, image: Image.Image, filename: str) -> str:
+        """Save image directly to NVMe SSD for fast access."""
+        try:
+            filepath = os.path.join(self.output_dir, filename)
+            image.save(filepath, format='PNG', optimize=True, compress_level=1)
+            logger.debug(f"💾 Saved to SSD: {filepath}")
+            return filepath
+        except Exception as e:
+            logger.warning(f"SSD save failed: {e}")
+            return ""
 
     # ----------------------------- Utilities ---------------------------------
     def _create_placeholder_image(self, width: int, height: int, text: str) -> str:
@@ -224,6 +297,91 @@ class ImageGenerationService:
             logger.warning(f"Failed to generate embeddings with Compel: {e}")
             return None, None
 
+    # ------------------------- Model Cache & Preload ------------------------
+    async def _preload_popular_models(self):
+        """Background preloading of popular models for instant switching."""
+        popular_models = ["anime", "realistic", "chibi"]  # Most used styles
+        
+        async with self._preload_lock:
+            for style in popular_models:
+                try:
+                    model_id = self.manhwa_style_models.get(style, self.model_id)
+                    if model_id not in self._model_cache:
+                        logger.info(f"🔄 Preloading {style} model: {model_id}")
+                        await self._load_model_to_cache(model_id, style)
+                        await asyncio.sleep(1)  # Small delay between loads
+                except Exception as e:
+                    logger.warning(f"Failed to preload {style}: {e}")
+    
+    async def _load_model_to_cache(self, model_id: str, style: str) -> StableDiffusionPipeline:
+        """Load a model into cache, managing VRAM limits."""
+        if model_id in self._model_cache:
+            return self._model_cache[model_id]
+            
+        # Check cache size limit
+        if len(self._model_cache) >= self._cache_size_limit:
+            # Remove oldest model (simple LRU)
+            oldest_key = next(iter(self._model_cache))
+            logger.info(f"🗑️ Removing {oldest_key} from cache to make room")
+            del self._model_cache[oldest_key]
+            torch.cuda.empty_cache()
+            
+        logger.info(f"📥 Loading {model_id} to cache")
+        
+        dtype = torch.float16 if (self.device == "cuda") else torch.float32
+        # Use NVMe SSD for model storage
+        pipeline = StableDiffusionPipeline.from_pretrained(
+            model_id,
+            torch_dtype=dtype,
+            safety_checker=None,
+            requires_safety_checker=False,
+            cache_dir=self.model_cache_dir,
+            # SSD optimization: use local files when possible
+            local_files_only=False,
+            resume_download=True,
+        )
+        
+        # Apply optimizations
+        try:
+            pipeline.scheduler = DPMSolverMultistepScheduler.from_config(
+                pipeline.scheduler.config,
+                algorithm_type="dpmsolver++",
+            )
+        except Exception as e:
+            logger.warning(f"Falling back to default scheduler: {e}")
+            
+        pipeline = pipeline.to(self.device)
+        
+        # Performance optimizations for high-VRAM + NVMe SSD setup
+        if self.device == "cuda":
+            torch.backends.cuda.matmul.allow_tf32 = True
+            torch.backends.cudnn.allow_tf32 = True
+            # SSD-optimized CUDA settings
+            torch.backends.cudnn.benchmark = True  # Faster for consistent input sizes
+            
+        # Enable xFormers for 2-3x speedup
+        try:
+            pipeline.enable_xformers_memory_efficient_attention()
+            logger.debug("✅ xFormers enabled for model cache")
+        except Exception:
+            pass
+            
+        # VAE optimizations
+        if hasattr(pipeline, "enable_vae_slicing"):
+            pipeline.enable_vae_slicing()
+        if hasattr(pipeline, "vae") and hasattr(pipeline.vae, "enable_tiling"):
+            pipeline.vae.enable_tiling()
+            
+        # SSD-specific optimizations: use temp directory for intermediate files
+        if hasattr(pipeline, "unet"):
+            # Set temporary directory for model operations
+            os.environ['TMPDIR'] = self.temp_dir
+            os.environ['TMP'] = self.temp_dir
+            
+        self._model_cache[model_id] = pipeline
+        logger.info(f"✅ Cached {model_id} ({len(self._model_cache)}/{self._cache_size_limit})")
+        return pipeline
+
     # ----------------------------- Model load --------------------------------
     async def load_model(self, style: str = "anime", model_override: Optional[str] = None):
         if not STABLE_DIFFUSION_AVAILABLE:
@@ -231,57 +389,50 @@ class ImageGenerationService:
 
         async with self._lock:
             target_model_id = model_override or self.manhwa_style_models.get(style, self.model_id)
+            
+            # Check if already loaded as current pipeline
             if self.pipeline is not None and self.loaded_model_id == target_model_id:
-                # already loaded (style may differ but model id is what matters)
                 self.loaded_style = style
+                logger.info(f"⚡ Model {target_model_id} already active")
                 return
 
-            logger.info(f"Loading SD model: {target_model_id} (style={style})")
-            try:
-                dtype = torch.float16 if (self.device == "cuda") else torch.float32
-                self.pipeline = StableDiffusionPipeline.from_pretrained(
-                    target_model_id,
-                    torch_dtype=dtype,
-                    safety_checker=None,
-                    requires_safety_checker=False,
-                    cache_dir="/models",
-                )
-
-                # DPM++ Multistep for crisp lines
-                try:
-                    self.pipeline.scheduler = DPMSolverMultistepScheduler.from_config(
-                        self.pipeline.scheduler.config,
-                        algorithm_type="dpmsolver++",
-                    )
-                except Exception as e:
-                    logger.warning(f"Falling back to default scheduler: {e}")
-
-                self.pipeline = self.pipeline.to(self.device)
-
-                # Perf toggles
-                if self.device == "cuda":
-                    torch.backends.cuda.matmul.allow_tf32 = True
-                if hasattr(self.pipeline, "enable_attention_slicing"):
-                    self.pipeline.enable_attention_slicing("max")
-                if hasattr(self.pipeline, "enable_vae_slicing"):
-                    self.pipeline.enable_vae_slicing()
-                if hasattr(self.pipeline, "vae") and hasattr(self.pipeline.vae, "enable_tiling"):
-                    self.pipeline.vae.enable_tiling()
-                if self.device == "cuda":
-                    try:
-                        # better sustained throughput than full offload
-                        self.pipeline.enable_sequential_cpu_offload()
-                    except Exception:
-                        self.pipeline.enable_model_cpu_offload()
-
-                self._i2i = None  # reset; will rebuild from new base pipe lazily
-                self._compel = None  # reset; will rebuild with new model
+            # Check cache first - instant model switching!
+            if target_model_id in self._model_cache:
+                logger.info(f"🚀 Switching to cached model: {target_model_id}")
+                self.pipeline = self._model_cache[target_model_id]
                 self.loaded_style = style
                 self.loaded_model_id = target_model_id
-                logger.info("Model loaded successfully")
-            except Exception as e:
-                logger.error(f"Error loading model '{target_model_id}': {e}")
-                raise
+                self._i2i = None  # reset for new base pipe
+                self._compel = None  # reset for new model
+                return
+
+            # Load new model to cache with fallback logic
+            models_to_try = [target_model_id] + self.fallback_models
+            
+            for attempt, model_id in enumerate(models_to_try):
+                if model_id == target_model_id:
+                    logger.info(f"📥 Loading primary model: {model_id} (style={style})")
+                else:
+                    logger.warning(f"🔄 Trying fallback model #{attempt}: {model_id}")
+                
+                try:
+                    self.pipeline = await self._load_model_to_cache(model_id, style)
+                    self._i2i = None  # reset; will rebuild from new base pipe lazily
+                    self._compel = None  # reset; will rebuild with new model
+                    self.loaded_style = style
+                    self.loaded_model_id = model_id
+                    if model_id == target_model_id:
+                        logger.info("✅ Primary model loaded successfully")
+                    else:
+                        logger.info(f"✅ Fallback model loaded: {model_id}")
+                    break
+                except Exception as e:
+                    if attempt < len(models_to_try) - 1:
+                        logger.warning(f"❌ Failed to load {model_id}: {e}")
+                        continue
+                    else:
+                        logger.error(f"❌ All models failed. Last error for {model_id}: {e}")
+                        raise
 
     # ----------------------------- LoRA hooks --------------------------------
     def apply_lora(self, lora_path: str, weight: float = 0.8):
@@ -369,6 +520,91 @@ class ImageGenerationService:
         return out
 
     # --------------------------- Public methods ------------------------------
+    async def generate_batch(
+        self,
+        prompts: List[str],
+        *,
+        style: str = "anime", 
+        width: int = 768,
+        height: int = 1152,
+        num_images: int = 4,
+        seed: Optional[int] = None,
+        guidance_scale: float = 7.5,
+        steps: int = 25,
+        model_override: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        """Generate multiple images in a single batch for maximum efficiency."""
+        if not STABLE_DIFFUSION_AVAILABLE:
+            results = []
+            for i, prompt in enumerate(prompts):
+                img_b64 = self._create_placeholder_image(width, height, f"Batch {i+1}\n{prompt[:20]}...")
+                results.append({
+                    "image_base64": img_b64,
+                    "prompt": prompt,
+                    "batch_index": i,
+                    "placeholder": True
+                })
+            return results
+            
+        await self.load_model(style, model_override=model_override)
+        
+        # Process all prompts together
+        batch_results = []
+        for prompt in prompts:
+            pos, neg = self.build_prompts(prompt, style)
+            
+            try:
+                # Generate batch of images for this prompt
+                images = self.pipeline(
+                    prompt=[pos] * num_images,
+                    negative_prompt=[neg] * num_images,
+                    width=self._round_to_8(width),
+                    height=self._round_to_8(height),
+                    num_inference_steps=steps,
+                    guidance_scale=guidance_scale,
+                    generator=[self._generator(seed + i if seed else None) for i in range(num_images)],
+                ).images
+                
+                # Convert to results
+                for i, img in enumerate(images):
+                    batch_results.append({
+                        "image_base64": self._image_to_b64(img),
+                        "prompt": pos,
+                        "width": img.width,
+                        "height": img.height,
+                        "seed": seed + i if seed else None,
+                        "batch_index": len(batch_results),
+                        "model": self.loaded_model_id,
+                    })
+                    
+            except RuntimeError as e:
+                if "CUDA out of memory" in str(e):
+                    logger.warning("OOM in batch generation - reducing batch size")
+                    # Fall back to individual generation
+                    img = self.pipeline(
+                        prompt=pos,
+                        negative_prompt=neg,
+                        width=self._round_to_8(width),
+                        height=self._round_to_8(height),
+                        num_inference_steps=steps,
+                        guidance_scale=guidance_scale,
+                        generator=self._generator(seed),
+                    ).images[0]
+                    
+                    batch_results.append({
+                        "image_base64": self._image_to_b64(img),
+                        "prompt": pos,
+                        "width": img.width,
+                        "height": img.height,
+                        "seed": seed,
+                        "batch_index": len(batch_results),
+                        "model": self.loaded_model_id,
+                    })
+                else:
+                    raise
+                    
+        return batch_results
+
     async def generate_character_art(
         self,
         character_prompt: str,
@@ -419,8 +655,8 @@ class ImageGenerationService:
                     negative_prompt_embeds=negative_prompt_embeds,
                     width=base_w,
                     height=base_h,
-                    num_inference_steps=30,
-                    guidance_scale=6.5,
+                    num_inference_steps=25,
+                    guidance_scale=7.5,
                     generator=self._generator(seed),
                 ).images[0]
             else:
@@ -431,8 +667,8 @@ class ImageGenerationService:
                     negative_prompt=neg,
                     width=base_w,
                     height=base_h,
-                    num_inference_steps=30,
-                    guidance_scale=6.5,
+                    num_inference_steps=25,
+                    guidance_scale=7.5,
                     generator=self._generator(seed),
                 ).images[0]
         except RuntimeError as e:
@@ -461,7 +697,7 @@ class ImageGenerationService:
                     img,
                     pos,
                     neg,
-                    denoise=0.32,
+                    denoise=0.35,
                     upscale=upscale,
                     seed=seed,
                     steps=18,
@@ -698,6 +934,39 @@ class ImageGenerationService:
             return ManhwaPromptBuilder.get_style_options()
         else:
             return list(self.manhwa_style_models.keys())
+    
+    def get_ssd_stats(self) -> Dict[str, Any]:
+        """Get NVMe SSD usage statistics."""
+        import shutil
+        
+        stats = {
+            "ssd_paths": {
+                "models": self.model_cache_dir,
+                "outputs": self.output_dir, 
+                "temp": self.temp_dir
+            },
+            "cache_info": {
+                "cached_models": len(self._model_cache),
+                "cache_limit": self._cache_size_limit,
+                "loaded_model": self.loaded_model_id
+            }
+        }
+        
+        # Get disk usage for each SSD path
+        for name, path in stats["ssd_paths"].items():
+            try:
+                if os.path.exists(path):
+                    total, used, free = shutil.disk_usage(path)
+                    stats[f"{name}_disk"] = {
+                        "total_gb": round(total / (1024**3), 2),
+                        "used_gb": round(used / (1024**3), 2),  
+                        "free_gb": round(free / (1024**3), 2),
+                        "usage_percent": round((used / total) * 100, 1)
+                    }
+            except Exception:
+                stats[f"{name}_disk"] = "unavailable"
+                
+        return stats
 
     async def cleanup(self):
         if self.pipeline:

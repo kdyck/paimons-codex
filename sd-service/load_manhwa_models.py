@@ -138,15 +138,35 @@ def create_model_config():
             "manhwa style", "korean webtoon", "digital art",
             "clean lines", "cell shading", "anime style",
             "beautiful composition", "professional artwork"
-        ]
+        ],
+        "ssd_optimized": True,
+        "nvme_paths": {
+            "models": "/nvme-models",
+            "outputs": "/nvme-outputs",
+            "temp": "/nvme-temp"
+        }
     }
     
-    config_file = Path("/models/manhwa_config.json")
+    # Use NVMe SSD path for config
+    config_file = Path("/nvme-models/manhwa_config.json")
+    config_file.parent.mkdir(parents=True, exist_ok=True)
+    
     import json
     with open(config_file, 'w') as f:
         json.dump(config, f, indent=2)
     
     print(f"⚙️ Configuration saved to {config_file}")
+    
+    # Also create a symlink at the old location for compatibility
+    try:
+        old_config = Path("/models/manhwa_config.json")
+        old_config.parent.mkdir(parents=True, exist_ok=True)
+        if old_config.exists():
+            old_config.unlink()
+        old_config.symlink_to(config_file)
+        print(f"🔗 Created compatibility symlink: {old_config}")
+    except Exception as e:
+        print(f"⚠️ Could not create symlink: {e}")
 
 if __name__ == "__main__":
     print("🎨 Setting up manhwa generation models...")

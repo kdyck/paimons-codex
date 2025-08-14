@@ -87,14 +87,14 @@ echo "🪣 Initializing MinIO bucket..."
 
 # Check and pull Ollama models
 echo ""
-echo "🦙 Checking Ollama models..."
+echo "🤖 Checking Ollama models..."
 if curl -s http://127.0.0.1:11434/api/tags | grep -q '"models":\[]'; then
-    echo "📥 No models found, pulling llama3.2..."
-    if podman exec paimons-ollama ollama pull llama3.2; then
-        echo "✅ llama3.2 model ready"
+    echo "📥 No models found, pulling mistral..."
+    if podman exec paimons-ollama ollama pull mistral; then
+        echo "✅ Mistral model ready"
     else
-        echo "❌ Failed to pull llama3.2 model"
-        echo "You may need to manually run: podman exec paimons-ollama ollama pull llama3.2"
+        echo "❌ Failed to pull Mistral model"
+        echo "You may need to manually run: podman exec paimons-ollama ollama pull mistral"
     fi
 else
     echo "✅ Ollama models already available"

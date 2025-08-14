@@ -12,9 +12,9 @@ class ManhwaPromptBuilder:
     """Builds optimized prompts for manhwa/webtoon style image generation."""
     
     STYLE_PROMPTS = {
-        "anime": "anime style, manga art, cel-shaded, clean lines, vibrant colors, beautiful, high quality, masterpiece, detailed, friendly, pleasant",
-        "realistic": "realistic, detailed, photorealistic, high quality, beautiful, masterpiece, pleasant, friendly, well-lit", 
-        "chibi": "chibi style, cute, kawaii, simple, rounded features, adorable, cheerful, friendly, wholesome",
+        "anime": "manhwa style, webtoon art, korean comic style, clean line art, soft shading, mature illustration, natural colors, realistic features",
+        "realistic": "realistic manhwa, detailed illustration, semi-realistic art, professional digital art, natural lighting, believable characters", 
+        "chibi": "chibi manhwa style, cute korean comic, simplified features, soft colors, wholesome, friendly",
     }
     
     BASE_NEGATIVE = (
@@ -24,11 +24,12 @@ class ManhwaPromptBuilder:
         "poorly drawn face, mutation, deformed face, ugly, bad eyes, crossed eyes, "
         "extra heads, extra arms, extra legs, malformed limbs, fused fingers, too many fingers, "
         "long neck, mutated, bad body, bad proportions, cloned face, gross proportions, "
-        "scary, horror, creepy, nightmare, dark, evil, demon, monster, zombie, gore, blood, "
-        "violence, disturbing, unsettling, menacing, sinister, grotesque, macabre"
+        "genshin impact, genshin style, mihoyo, game character, overly fantasy, gacha game style, "
+        "too colorful hair, unnatural hair colors, elaborate costumes, fantasy armor, "
+        "over-stylized, exaggerated features, unrealistic proportions"
     )
     
-    MANHWA_STYLE = "manhwa style, webtoon style, korean comic art, digital art, beautiful composition, dramatic lighting"
+    MANHWA_STYLE = "korean webtoon style, manhwa illustration, modern digital art, natural lighting, realistic proportions, contemporary design"
     
     @classmethod
     def build_prompts(cls, prompt: str, style: str = "anime") -> Tuple[str, str]:
@@ -56,7 +57,14 @@ class ManhwaPromptBuilder:
         # Determine gender-specific cues from prompt
         gender_cues = cls._get_gender_cues(character_prompt)
         
-        full_prompt = f"{cardinality_cues}, {gender_cues}, character portrait, {character_prompt}, full body"
+        # Add manhwa-specific character qualities for more realistic look
+        character_enhancements = (
+            "natural hair colors, realistic clothing, modern fashion, "
+            "korean features, expressive eyes, natural proportions, "
+            "contemporary style, believable character design, normal human appearance"
+        )
+        
+        full_prompt = f"{cardinality_cues}, {gender_cues}, character portrait, {character_prompt}, {character_enhancements}"
         return cls.build_prompts(full_prompt, style)
     
     @classmethod

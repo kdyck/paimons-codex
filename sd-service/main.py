@@ -74,12 +74,65 @@ from image_generation_service import ImageGenerationService
 def setup_models_on_startup():
     """Setup manhwa models on service startup"""
     try:
-        from load_manhwa_models import create_model_config
-        logger.info("🎨 Setting up manhwa generation models...")
-        create_model_config()
+        # Create manhwa config directly since load_manhwa_models might not exist
+        create_default_config()
         logger.info("✅ Manhwa model configuration ready")
     except Exception as e:
         logger.warning(f"Model setup failed (will use defaults): {e}")
+
+def create_default_config():
+    """Create default manhwa configuration"""
+    import json
+    
+    config = {
+        "recommended_settings": {
+            "sampler": "DPM++ 2M Karras",
+            "steps": 25,
+            "cfg_scale": 7.5,
+            "width": 768,
+            "height": 1152,
+            "clip_skip": 2,
+        },
+        "quality_tags": [
+            "masterpiece", "best quality", "ultra detailed",
+            "extremely detailed face", "perfect lighting",
+            "8k uhd", "high resolution"
+        ],
+        "manhwa_tags": [
+            "manhwa style", "korean webtoon", "digital art",
+            "clean lines", "cell shading", "anime style",
+            "beautiful composition", "professional artwork"
+        ],
+        "ssd_optimized": True,
+        "nvme_paths": {
+            "models": "/nvme-models",
+            "outputs": "/nvme-outputs",
+            "temp": "/nvme-temp"
+        }
+    }
+    
+    # Ensure NVMe directories exist
+    os.makedirs("/nvme-models", exist_ok=True)
+    os.makedirs("/nvme-outputs", exist_ok=True) 
+    os.makedirs("/nvme-temp", exist_ok=True)
+    
+    # Write config to NVMe SSD
+    config_path = "/nvme-models/manhwa_config.json"
+    with open(config_path, 'w') as f:
+        json.dump(config, f, indent=2)
+    
+    # Create compatibility symlink for backward compatibility
+    try:
+        old_path = "/models/manhwa_config.json"
+        os.makedirs("/models", exist_ok=True)
+        if os.path.exists(old_path):
+            os.unlink(old_path)
+        os.symlink(config_path, old_path)
+        logger.info(f"🔗 Created compatibility symlink: {old_path} -> {config_path}")
+    except Exception as e:
+        logger.warning(f"Could not create symlink: {e}")
+    
+    logger.info(f"🎨 Created manhwa config at: {config_path}")
 
 # Initialize on startup
 setup_models_on_startup()
@@ -121,6 +174,17 @@ class CoverRequest(BaseModel):
     hires: bool = True
     model_override: Optional[str] = None
 
+class BatchRequest(BaseModel):
+    prompts: List[str]
+    style: str = "anime"
+    width: int = 768
+    height: int = 1152
+    num_images: int = 4  # Images per prompt
+    seed: Optional[int] = None
+    guidance_scale: float = 7.5
+    steps: int = 25
+    model_override: Optional[str] = None
+
 # Global service instance
 image_service = None
 
@@ -144,6 +208,13 @@ async def get_styles():
     if image_service:
         return {"styles": image_service.get_style_options()}
     return {"styles": ["anime", "realistic", "chibi"]}
+
+@app.get("/ssd-stats")
+async def get_ssd_stats():
+    """Get NVMe SSD usage and performance statistics."""
+    if image_service:
+        return image_service.get_ssd_stats()
+    return {"error": "Service not initialized"}
 
 @app.post("/generate/character")
 async def generate_character(request: CharacterRequest):
@@ -212,6 +283,38 @@ async def generate_cover(request: CoverRequest):
         return result
     except Exception as e:
         logger.error(f"Cover generation failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/generate/batch")
+async def generate_batch(request: BatchRequest):
+    """High-performance batch generation optimized for 24GB VRAM"""
+    if not image_service:
+        raise HTTPException(status_code=503, detail="Service not initialized")
+    
+    try:
+        results = await image_service.generate_batch(
+            prompts=request.prompts,
+            style=request.style,
+            width=request.width,
+            height=request.height,
+            num_images=request.num_images,
+            seed=request.seed,
+            guidance_scale=request.guidance_scale,
+            steps=request.steps,
+            model_override=request.model_override
+        )
+        return {
+            "images": results,
+            "total_generated": len(results),
+            "batch_info": {
+                "prompts_count": len(request.prompts),
+                "images_per_prompt": request.num_images,
+                "style": request.style,
+                "model": image_service.loaded_model_id if image_service else None
+            }
+        }
+    except Exception as e:
+        logger.error(f"Batch generation failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # Legacy endpoint for backward compatibility

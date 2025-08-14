@@ -123,7 +123,7 @@ def generate_character_training_command(config_path: str):
     # Character LoRA training command
     cmd = f"""
 accelerate launch train_text_to_image_lora.py \\
-  --pretrained_model_name_or_path="runwayml/stable-diffusion-v1-5" \\
+  --pretrained_model_name_or_path="xyn-ai/anything-v4.0" \\
   --train_data_dir="{dataset_path}/images" \\
   --caption_column="text" \\
   --resolution={settings['resolution']} \\

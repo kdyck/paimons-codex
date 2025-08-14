@@ -118,7 +118,7 @@ def main():
     
     # Load models
     print("Loading models...")
-    model_id = "runwayml/stable-diffusion-v1-5"
+    model_id = "xyn-ai/anything-v4.0"  # Anything v4.0 - better for anime/manhwa
     
     noise_scheduler = DDPMScheduler.from_pretrained(model_id, subfolder="scheduler")
     tokenizer = CLIPTokenizer.from_pretrained(model_id, subfolder="tokenizer")

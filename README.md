@@ -6,7 +6,7 @@ An AI-powered manhwa creation and discovery platform designed for local developm
 
 - 🤖 **AI Manhwa Generation**: Complete manhwa creation with story, characters, and artwork
 - 🎨 **Stable Diffusion Integration**: Generate character art, scenes, and cover artwork
-- 💬 **LLM Text Generation**: Powered by Ollama/Llama3.2 for story creation
+- 💬 **LLM Text Generation**: Powered by Ollama/Mistral for story creation
 - 🔍 **Vector Search**: Oracle 23ai semantic search for manhwa discovery  
 - 📱 **Modern UI**: React frontend with glassmorphism design
 - 🐳 **Containerized**: Full Podman/Docker setup with GPU acceleration
@@ -30,7 +30,7 @@ paimons-codex/
 ├── api/                    # FastAPI backend service
 │   ├── rest/              # REST API endpoints (manhwa, llm, images, import)
 │   ├── services/          # Business logic services
-│   ├── llm/               # LLM integration (Ollama/Llama3.2)
+│   ├── llm/               # LLM integration (Ollama/Mistral)
 │   └── main.py            # FastAPI application entry point
 ├── dal/                   # Data Access Layer
 │   ├── oracle_client.py   # Oracle 23ai database client with vector search
@@ -111,7 +111,7 @@ chmod +x scripts/*.sh
 
 **Note**: The startup script automatically handles setup:
 - **MinIO**: Creates the `codex` bucket with public read permissions
-- **Ollama**: Pulls llama3.2 model if no models are found
+- **Ollama**: Pulls mistral model if no models are found
 - **Health Checks**: Verifies all services are running properly
 - This happens automatically during `./scripts/start.sh`
 
@@ -152,7 +152,7 @@ Tested on **Intel i9-12900KF + RTX 3090 + 32GB RAM**:
 - **1024×1536** (high-res with upscaling): ~6-8 seconds
 - **Batch generation**: Multiple images in parallel
 
-**Text Generation (Ollama/Llama3.2):**
+**Text Generation (Ollama/Mistral):**
 - **Short responses** (100 tokens): ~1-2 seconds
 - **Story generation** (1000+ tokens): ~10-15 seconds
 - **Full manhwa stories**: ~30-60 seconds
@@ -170,7 +170,7 @@ Tested on **Intel i9-12900KF + RTX 3090 + 32GB RAM**:
 - **Caddy Proxy**: HTTPS termination, load balancing, and security headers
 - **Oracle 23ai**: Enterprise database with built-in vector search capabilities
 - **MinIO**: S3-compatible object storage with web console
-- **Ollama**: LLM service running Llama3.2 for text generation
+- **Ollama**: LLM service running Mistral for text generation
 - **Stable Diffusion**: AI image generation service for artwork creation
 
 📋 **[See ARCHITECTURE.md for detailed service specifications →](./ARCHITECTURE.md)**
