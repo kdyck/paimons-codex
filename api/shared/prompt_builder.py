@@ -12,9 +12,9 @@ class ManhwaPromptBuilder:
     """Builds optimized prompts for manhwa/webtoon style image generation."""
     
     STYLE_PROMPTS = {
-        "anime": "manhwa style, webtoon art, korean comic style, clean line art, soft shading, mature illustration, natural colors, realistic features",
-        "realistic": "realistic manhwa, detailed illustration, semi-realistic art, professional digital art, natural lighting, believable characters", 
-        "chibi": "chibi manhwa style, cute korean comic, simplified features, soft colors, wholesome, friendly",
+        "anime": "anime style, manga art, cel-shaded, clean lines, vibrant colors, beautiful, high quality, masterpiece, detailed, friendly, pleasant",
+        "realistic": "realistic, detailed, photorealistic, high quality, beautiful, masterpiece, pleasant, friendly, well-lit",
+        "chibi": "chibi style, cute, kawaii, simple, rounded features, adorable, cheerful, friendly, wholesome",
     }
     
     BASE_NEGATIVE = (
@@ -24,12 +24,10 @@ class ManhwaPromptBuilder:
         "poorly drawn face, mutation, deformed face, ugly, bad eyes, crossed eyes, "
         "extra heads, extra arms, extra legs, malformed limbs, fused fingers, too many fingers, "
         "long neck, mutated, bad body, bad proportions, cloned face, gross proportions, "
-        "genshin impact, genshin style, mihoyo, game character, overly fantasy, gacha game style, "
-        "too colorful hair, unnatural hair colors, elaborate costumes, fantasy armor, "
-        "over-stylized, exaggerated features, unrealistic proportions"
+        "genshin impact, genshin style, fantasy armor, elaborate costumes, unnatural hair colors"
     )
     
-    MANHWA_STYLE = "korean webtoon style, manhwa illustration, modern digital art, natural lighting, realistic proportions, contemporary design"
+    MANHWA_STYLE = "manhwa illustration, webtoon style, korean comic art, digital art, beautiful composition, dramatic lighting"
     
     @classmethod
     def build_prompts(cls, prompt: str, style: str = "anime") -> Tuple[str, str]:
@@ -57,14 +55,13 @@ class ManhwaPromptBuilder:
         # Determine gender-specific cues from prompt
         gender_cues = cls._get_gender_cues(character_prompt)
         
-        # Add manhwa-specific character qualities for more realistic look
-        character_enhancements = (
-            "natural hair colors, realistic clothing, modern fashion, "
-            "korean features, expressive eyes, natural proportions, "
-            "contemporary style, believable character design, normal human appearance"
-        )
+        # Add realistic character qualities to counter Genshin style
+        character_enhancements = "natural hair colors, modern clothing, realistic features"
         
-        full_prompt = f"{cardinality_cues}, {gender_cues}, character portrait, {character_prompt}, {character_enhancements}"
+        # Add ethnicity diversity
+        ethnicity_cues = cls._get_ethnicity_cues(character_prompt)
+        
+        full_prompt = f"{cardinality_cues}, {gender_cues}, character portrait, {character_prompt}, {character_enhancements}, {ethnicity_cues}"
         return cls.build_prompts(full_prompt, style)
     
     @classmethod
@@ -100,6 +97,34 @@ class ManhwaPromptBuilder:
             return "1boy"
         else:
             return "1person"  # Gender neutral
+    
+    @classmethod
+    def _get_ethnicity_cues(cls, prompt: str) -> str:
+        """Detect and enhance ethnicity representation."""
+        prompt_lower = prompt.lower()
+        
+        # Explicit ethnicity mentions
+        if any(word in prompt_lower for word in ["black", "african", "dark skin", "brown skin"]):
+            return "dark skin, african features, black person"
+        elif any(word in prompt_lower for word in ["latino", "latina", "hispanic", "brown"]):
+            return "brown skin, latino features, hispanic person"
+        elif any(word in prompt_lower for word in ["asian", "east asian", "korean", "japanese", "chinese"]):
+            return "asian features, east asian person"
+        elif any(word in prompt_lower for word in ["middle eastern", "arab", "persian"]):
+            return "middle eastern features, olive skin"
+        elif any(word in prompt_lower for word in ["indian", "south asian", "desi"]):
+            return "south asian features, brown skin"
+        else:
+            # Default to diverse representation if no specific ethnicity mentioned
+            import random
+            diverse_options = [
+                "dark skin, african features",
+                "brown skin, latino features", 
+                "asian features, east asian",
+                "olive skin, middle eastern features",
+                "diverse ethnicity, natural skin tone"
+            ]
+            return random.choice(diverse_options)
     
     @classmethod
     def get_style_options(cls) -> list:
