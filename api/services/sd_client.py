@@ -161,6 +161,47 @@ class StableDiffusionClient:
             error_msg = f"SD client error: {str(e)}"
             logger.error(error_msg)
             return {"error": error_msg}
+
+    async def generate_advanced_cover_art(
+        self,
+        enhanced_prompt: str,
+        style: str = "anime",
+        width: int = 832,
+        height: int = 1216,
+        seed: Optional[int] = None,
+        hires: bool = True
+    ) -> Dict[str, Any]:
+        """Generate advanced cover art with custom prompt using the SD service."""
+        try:
+            payload = {
+                "enhanced_prompt": enhanced_prompt,
+                "style": style,
+                "width": width,
+                "height": height,
+                "seed": seed,
+                "hires": hires
+            }
+            
+            logger.info(f"Sending advanced cover generation request: {enhanced_prompt[:50]}...")
+            
+            response = await self.client.post(
+                f"{self.base_url}/generate/advanced-cover", 
+                json=payload
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                logger.info("Advanced cover art generated successfully")
+                return result
+            else:
+                error_msg = f"SD service returned status {response.status_code}: {response.text}"
+                logger.error(error_msg)
+                return {"error": error_msg}
+                
+        except Exception as e:
+            error_msg = f"SD client error: {str(e)}"
+            logger.error(error_msg)
+            return {"error": error_msg}
     
     async def close(self):
         """Close the HTTP client."""

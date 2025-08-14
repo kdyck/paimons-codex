@@ -80,6 +80,7 @@ class StoryGenerationRequest(BaseModel):
     plot_outline: str = ""  # optional existing plot
     chapter_count: int = 10
     art_style: str = "anime style"  # anime style, realistic, chibi, etc.
+    advanced_config: Optional[Dict[str, Any]] = None  # Advanced configuration from UI
 
 class ChapterGenerationRequest(BaseModel):
     story_id: str
@@ -226,34 +227,98 @@ async def generate_cover_art(request: CoverArtRequest):
 async def generate_full_manhwa(story_request: StoryGenerationRequest):
     """Generate complete manhwa with story and art"""
     try:
+        # Handle advanced configuration if provided
+        if story_request.advanced_config:
+            config = story_request.advanced_config
+            
+            # Extract story parameters from advanced config
+            story_config = config.get("story", {})
+            character_config = config.get("characters", {}).get("main_character", {})
+            cover_config = config.get("cover_art", {})
+            tech_config = config.get("technical", {})
+            
+            # Override base parameters with advanced config
+            genre = ", ".join(story_config.get("genres", [story_request.genre]))
+            setting = story_config.get("setting", story_request.setting)
+            main_character = character_config.get("name") or story_request.main_character
+            plot_outline = story_config.get("plot_outline", story_request.plot_outline)
+            art_style = cover_config.get("style", story_request.art_style)
+            
+            # Build enhanced character description
+            character_description = []
+            if character_config.get("age"):
+                character_description.append(f"{character_config['age']} years old")
+            if character_config.get("gender") and character_config["gender"] != "any":
+                character_description.append(character_config["gender"])
+            if character_config.get("ethnicity") and character_config["ethnicity"] != "diverse":
+                character_description.append(character_config["ethnicity"])
+            if character_config.get("personality"):
+                character_description.append(f"{character_config['personality']} personality")
+            if character_config.get("appearance"):
+                character_description.append(character_config["appearance"])
+            if character_config.get("background"):
+                character_description.append(character_config["background"])
+            
+            enhanced_character_desc = ", ".join(character_description) if character_description else "Main protagonist"
+            
+        else:
+            # Use basic parameters
+            genre = story_request.genre
+            setting = story_request.setting
+            main_character = story_request.main_character
+            plot_outline = story_request.plot_outline
+            art_style = story_request.art_style
+            enhanced_character_desc = "Main protagonist"
+        
         # Generate story first
         story = await llama_service.generate_manhwa_story(
-            genre=story_request.genre,
-            setting=story_request.setting,
-            main_character=story_request.main_character,
-            plot_outline=story_request.plot_outline,
+            genre=genre,
+            setting=setting,
+            main_character=main_character,
+            plot_outline=plot_outline,
             chapter_count=story_request.chapter_count,
-            art_style=story_request.art_style
+            art_style=art_style
         )
         
-        # Generate cover art
-        cover_art = await image_service.generate_cover_art(
-            title=story["title"],
-            genre=story_request.genre,
-            main_character=story_request.main_character,
-            style=story_request.art_style
-        )
+        # Generate cover art with advanced parameters if available
+        if story_request.advanced_config and story_request.advanced_config.get("cover_art"):
+            cover_config = story_request.advanced_config["cover_art"]
+            
+            # Create enhanced cover art request
+            cover_art = await image_service.generate_advanced_cover_art(
+                title=story["title"],
+                genre=genre,
+                main_character=main_character,
+                style=cover_config.get("style", art_style),
+                composition=cover_config.get("composition", "character focus"),
+                mood=cover_config.get("mood", "dramatic"),
+                color_scheme=cover_config.get("color_scheme", "vibrant"),
+                character_pose=cover_config.get("character_pose", "dynamic"),
+                lighting=cover_config.get("lighting", "dramatic"),
+                background_type=cover_config.get("background_type", "detailed"),
+                effects=cover_config.get("effects", []),
+                custom_prompt=cover_config.get("custom_prompt", ""),
+                resolution=cover_config.get("resolution", "832x1216")
+            )
+        else:
+            # Generate standard cover art
+            cover_art = await image_service.generate_cover_art(
+                title=story["title"],
+                genre=genre,
+                main_character=main_character,
+                style=art_style
+            )
         
         # Generate character sheet and art
         character_sheet = await llama_service.generate_character_sheet(
-            character_name=story_request.main_character,
-            description="Main protagonist",
-            art_style=story_request.art_style
+            character_name=main_character,
+            description=enhanced_character_desc,
+            art_style=art_style
         )
         
         character_art = await image_service.generate_character_art(
             character_sheet["art_prompt"],
-            style=story_request.art_style
+            style=art_style
         )
         
         # Store complete manhwa in MinIO (optional)
@@ -261,7 +326,8 @@ async def generate_full_manhwa(story_request: StoryGenerationRequest):
             "story": story,
             "cover_art": cover_art,
             "character_sheet": character_sheet,
-            "character_art": character_art
+            "character_art": character_art,
+            "advanced_config": story_request.advanced_config
         }
         
         stored_result = None

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+import AdvancedManhwaGenerator from '../components/AdvancedManhwaGenerator';
 
 const Container = styled.div`
   max-width: 1400px;
@@ -1055,7 +1056,7 @@ const AdminPage: React.FC = () => {
     });
   };
 
-  const generateManhwa = async () => {
+  const generateManhwa = async (config?: any) => {
     if (generating) return;
     
     try {
@@ -1075,15 +1076,34 @@ const AdminPage: React.FC = () => {
 
       setGenerationStatus('Generating story outline...');
       
+      let requestBody;
+      
+      if (config) {
+        // Advanced configuration from AdvancedManhwaGenerator
+        requestBody = {
+          genre: config.story.genres.join(', '),
+          setting: config.story.setting,
+          main_character: config.characters.main_character.name || config.characters.main_character.appearance || 'protagonist',
+          plot_outline: config.story.plot_outline,
+          chapter_count: 5, // Default for now
+          art_style: config.cover_art.style,
+          // Include advanced parameters
+          advanced_config: config
+        };
+      } else {
+        // Basic configuration from simple generator
+        requestBody = {
+          ...generatorForm,
+          genre: generatorForm.genre.join(', ')
+        };
+      }
+      
       const response = await fetch('http://localhost:8000/api/v1/llm/generate-full-manhwa', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...generatorForm,
-          genre: generatorForm.genre.join(', ')
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       clearInterval(progressInterval);
@@ -1143,11 +1163,36 @@ const AdminPage: React.FC = () => {
           onClick={() => setActiveTab('generator')}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="m2.7 10.3a2.41 2.41 0 0 0 0 3.41l7.59 7.59a2.41 2.41 0 0 0 3.41 0l7.59-7.59a2.41 2.41 0 0 0 0-3.41l-7.59-7.59a2.41 2.41 0 0 0-3.41 0Z"/>
-            <path d="m9.5 9.5 5 5"/>
-            <path d="m14.5 9.5-5 5"/>
+            <path d="M8 2v4"/>
+            <path d="M16 2v4"/>
+            <rect width="18" height="18" x="3" y="4" rx="2"/>
+            <path d="M3 10h18"/>
+            <path d="m9 16 2 2 4-4"/>
           </svg>
           <span>AI Generator</span>
+        </Tab>
+        <Tab 
+          $active={activeTab === 'advanced'} 
+          onClick={() => setActiveTab('advanced')}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 1v6M12 17v6"/>
+            <path d="m4.2 4.2 4.2 4.2M15.6 15.6l4.2 4.2"/>
+            <path d="M1 12h6M17 12h6"/>
+            <path d="m4.2 19.8 4.2-4.2M15.6 8.4l4.2-4.2"/>
+          </svg>
+          <span>Advanced Generator</span>
+        </Tab>
+        <Tab 
+          $active={activeTab === 'generated'} 
+          onClick={() => setActiveTab('generated')}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+            <circle cx="12" cy="13" r="3"/>
+          </svg>
+          <span>Generated Manhwa</span>
         </Tab>
         <Tab 
           $active={activeTab === 'management'} 
@@ -1155,8 +1200,8 @@ const AdminPage: React.FC = () => {
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
-            <path d="M12 13V7"/>
-            <path d="m8 10 4-4 4 4"/>
+            <path d="M9 10h6"/>
+            <path d="M9 14h6"/>
           </svg>
           <span>Manhwa Management</span>
         </Tab>
@@ -1345,6 +1390,155 @@ const AdminPage: React.FC = () => {
           </GeneratedResult>
         )}
       </GeneratorSection>
+      </TabContent>
+
+      {/* Advanced Manhwa Generator Tab */}
+      <TabContent $show={activeTab === 'advanced'}>
+        <AdvancedManhwaGenerator 
+          onGenerate={generateManhwa} 
+          generating={generating}
+        />
+      </TabContent>
+
+      {/* Generated Manhwa Tab */}
+      <TabContent $show={activeTab === 'generated'}>
+        <GeneratorSection>
+          <GeneratorTitle>📚 Generated Manhwa Collection</GeneratorTitle>
+          {generatedResult ? (
+            <GeneratedResult>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <ResultTitle>Latest Generated Manhwa</ResultTitle>
+                <Button onClick={downloadGeneratedContent} style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}>
+                  📥 Download JSON
+                </Button>
+              </div>
+              
+              {generatedResult.story && (
+                <div style={{ marginBottom: '2rem' }}>
+                  <h3 style={{ color: 'inherit', margin: '0 0 1rem 0', fontSize: '1.4rem' }}>
+                    📖 {generatedResult.story.title}
+                  </h3>
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+                    gap: '1rem', 
+                    marginBottom: '1rem',
+                    padding: '1rem',
+                    background: 'rgba(255,255,255,0.05)',
+                    borderRadius: '12px'
+                  }}>
+                    <div>
+                      <strong style={{ color: '#667eea' }}>Genre:</strong><br />
+                      {generatedResult.story.genre}
+                    </div>
+                    <div>
+                      <strong style={{ color: '#667eea' }}>Setting:</strong><br />
+                      {generatedResult.story.setting}
+                    </div>
+                    <div>
+                      <strong style={{ color: '#667eea' }}>Main Character:</strong><br />
+                      {generatedResult.story.main_character || 'Unnamed'}
+                    </div>
+                  </div>
+                  <div style={{ 
+                    background: 'rgba(0,0,0,0.2)', 
+                    padding: '1rem', 
+                    borderRadius: '8px', 
+                    border: '1px solid rgba(255,255,255,0.1)' 
+                  }}>
+                    <h4 style={{ margin: '0 0 0.5rem 0', color: '#667eea' }}>📝 Synopsis</h4>
+                    <ResultContent>{generatedResult.story.synopsis || generatedResult.story.full_content}</ResultContent>
+                  </div>
+                </div>
+              )}
+
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+                gap: '2rem',
+                marginBottom: '2rem'
+              }}>
+                {generatedResult.cover_art && (
+                  <div style={{ 
+                    background: 'rgba(255,255,255,0.03)', 
+                    padding: '1.5rem', 
+                    borderRadius: '12px',
+                    border: '1px solid rgba(255,255,255,0.1)'
+                  }}>
+                    <h4 style={{ color: 'inherit', margin: '0 0 1rem 0', fontSize: '1.2rem' }}>🎨 Cover Art</h4>
+                    <ImagePreview 
+                      src={`data:image/png;base64,${generatedResult.cover_art.image_base64}`} 
+                      alt="Generated cover art"
+                      style={{ width: '100%', maxWidth: '250px', height: 'auto' }}
+                    />
+                    <details style={{ marginTop: '1rem' }}>
+                      <summary style={{ cursor: 'pointer', color: '#667eea', fontSize: '0.9rem' }}>
+                        Show Generation Details
+                      </summary>
+                      <p style={{ fontSize: '0.8rem', opacity: 0.7, margin: '0.5rem 0 0 0', lineHeight: '1.4' }}>
+                        <strong>Prompt:</strong> {generatedResult.cover_art.prompt}
+                      </p>
+                    </details>
+                  </div>
+                )}
+
+                {generatedResult.character_art && (
+                  <div style={{ 
+                    background: 'rgba(255,255,255,0.03)', 
+                    padding: '1.5rem', 
+                    borderRadius: '12px',
+                    border: '1px solid rgba(255,255,255,0.1)'
+                  }}>
+                    <h4 style={{ color: 'inherit', margin: '0 0 1rem 0', fontSize: '1.2rem' }}>👤 Character Art</h4>
+                    <ImagePreview 
+                      src={`data:image/png;base64,${generatedResult.character_art.image_base64}`} 
+                      alt="Generated character art"
+                      style={{ width: '100%', maxWidth: '250px', height: 'auto' }}
+                    />
+                    <details style={{ marginTop: '1rem' }}>
+                      <summary style={{ cursor: 'pointer', color: '#667eea', fontSize: '0.9rem' }}>
+                        Show Generation Details
+                      </summary>
+                      <p style={{ fontSize: '0.8rem', opacity: 0.7, margin: '0.5rem 0 0 0', lineHeight: '1.4' }}>
+                        <strong>Prompt:</strong> {generatedResult.character_art.prompt}
+                      </p>
+                    </details>
+                  </div>
+                )}
+              </div>
+
+              {generatedResult.storage_error && (
+                <div style={{ 
+                  background: 'rgba(255, 193, 7, 0.1)', 
+                  border: '1px solid rgba(255, 193, 7, 0.3)',
+                  borderRadius: '8px',
+                  padding: '1rem',
+                  marginTop: '1rem',
+                  fontSize: '0.9rem'
+                }}>
+                  ⚠️ <strong>Note:</strong> Content generated successfully but not stored permanently ({generatedResult.storage_error}). 
+                  Use the Download button to save this content.
+                </div>
+              )}
+            </GeneratedResult>
+          ) : (
+            <div style={{ 
+              textAlign: 'center', 
+              padding: '4rem 2rem',
+              color: 'rgba(255,255,255,0.6)'
+            }}>
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" style={{ margin: '0 auto 1rem auto', opacity: 0.5 }}>
+                <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+                <circle cx="12" cy="13" r="3"/>
+              </svg>
+              <h3 style={{ margin: '0 0 0.5rem 0', color: 'inherit' }}>No Generated Manhwa Yet</h3>
+              <p style={{ margin: '0', opacity: 0.8 }}>
+                Use the AI Generator or Advanced Generator to create your first manhwa.<br />
+                Generated content will appear here for review and download.
+              </p>
+            </div>
+          )}
+        </GeneratorSection>
       </TabContent>
 
       {/* Manhwa Management Tab */}

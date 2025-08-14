@@ -312,6 +312,114 @@ class ImageGenerationService:
                 "error": str(e),
             }
 
+    async def generate_advanced_cover_art(
+        self,
+        title: str,
+        genre: str,
+        main_character: str,
+        *,
+        style: str = "anime",
+        composition: str = "character focus",
+        mood: str = "dramatic",
+        color_scheme: str = "vibrant",
+        character_pose: str = "dynamic",
+        lighting: str = "dramatic",
+        background_type: str = "detailed",
+        effects: List[str] = None,
+        custom_prompt: str = "",
+        resolution: str = "832x1216",
+        seed: Optional[int] = None,
+        hires: bool = True,
+    ) -> Dict[str, Any]:
+        """Generate advanced cover art with detailed customization options."""
+        
+        if effects is None:
+            effects = []
+        
+        # Parse resolution
+        try:
+            width, height = map(int, resolution.split('x'))
+        except ValueError:
+            width, height = 832, 1216
+        
+        if not await self._check_sd_service():
+            logger.warning("SD service unavailable, returning placeholder")
+            img_b64 = self._create_placeholder_image(width, height, f"Advanced Cover\n{title[:15]}…")
+            return {
+                "image_base64": img_b64,
+                "prompt": f"advanced manhwa cover art, {title}, {genre} theme",
+                "style": style,
+                "width": width,
+                "height": height,
+                "type": "cover",
+                "title": title,
+                "placeholder": True,
+            }
+
+        try:
+            # Build advanced prompt
+            prompt_parts = [
+                f"manhwa cover art",
+                f"{title}",
+                f"{genre} theme",
+                f"featuring {main_character}",
+                f"{style} style",
+                f"{composition}",
+                f"{mood} mood",
+                f"{color_scheme} colors",
+                f"{character_pose} pose",
+                f"{lighting} lighting",
+            ]
+            
+            if background_type != "simple":
+                prompt_parts.append(f"{background_type} background")
+            
+            if effects and not any(effect == "none" for effect in effects):
+                effects_str = ", ".join([effect for effect in effects if effect != "none"])
+                if effects_str:
+                    prompt_parts.append(f"{effects_str} effects")
+            
+            if custom_prompt:
+                prompt_parts.append(custom_prompt)
+            
+            enhanced_prompt = ", ".join(prompt_parts)
+            
+            sd_client = await get_sd_client()
+            result = await sd_client.generate_advanced_cover_art(
+                enhanced_prompt=enhanced_prompt,
+                style=style,
+                width=width,
+                height=height,
+                seed=seed,
+                hires=hires
+            )
+            
+            return {
+                "image_base64": result["image_base64"],
+                "prompt": result.get("prompt", enhanced_prompt),
+                "style": style,
+                "width": result["width"],
+                "height": result["height"],
+                "type": "cover",
+                "title": title,
+                "seed": seed,
+                "advanced": True,
+            }
+            
+        except Exception as e:
+            logger.error(f"Advanced cover generation failed: {e}")
+            img_b64 = self._create_placeholder_image(width, height, f"Error\n{str(e)[:30]}...")
+            return {
+                "image_base64": img_b64,
+                "prompt": enhanced_prompt if 'enhanced_prompt' in locals() else f"advanced cover, {title}",
+                "style": style,
+                "width": width,
+                "height": height,
+                "type": "cover",
+                "title": title,
+                "error": str(e),
+            }
+
     def get_style_options(self) -> List[str]:
         if PROMPT_BUILDER_AVAILABLE:
             return ManhwaPromptBuilder.get_style_options()

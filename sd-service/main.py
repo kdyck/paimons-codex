@@ -174,6 +174,17 @@ class CoverRequest(BaseModel):
     hires: bool = True
     model_override: Optional[str] = None
 
+class AdvancedCoverRequest(BaseModel):
+    enhanced_prompt: str
+    style: str = "anime"
+    width: int = 832
+    height: int = 1216
+    seed: Optional[int] = None
+    lora: Optional[str] = None
+    lora_scale: float = 0.8
+    hires: bool = True
+    model_override: Optional[str] = None
+
 class BatchRequest(BaseModel):
     prompts: List[str]
     style: str = "anime"
@@ -283,6 +294,28 @@ async def generate_cover(request: CoverRequest):
         return result
     except Exception as e:
         logger.error(f"Cover generation failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/generate/advanced-cover")
+async def generate_advanced_cover(request: AdvancedCoverRequest):
+    if not image_service:
+        raise HTTPException(status_code=503, detail="Service not initialized")
+    
+    try:
+        result = await image_service.generate_advanced_cover_art(
+            enhanced_prompt=request.enhanced_prompt,
+            style=request.style,
+            width=request.width,
+            height=request.height,
+            seed=request.seed,
+            lora=request.lora,
+            lora_scale=request.lora_scale,
+            hires=request.hires,
+            model_override=request.model_override
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Advanced cover generation failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/generate/batch")

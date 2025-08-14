@@ -929,6 +929,113 @@ class ImageGenerationService:
             "model": self.loaded_model_id,
         }
 
+    async def generate_advanced_cover_art(
+        self,
+        enhanced_prompt: str,
+        *,
+        style: str = "anime",
+        width: int = 832,
+        height: int = 1216,
+        seed: Optional[int] = None,
+        lora: Optional[str] = None,
+        lora_scale: float = 0.8,
+        hires: bool = True,
+        model_override: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Generate advanced cover art with custom enhanced prompt."""
+        if not STABLE_DIFFUSION_AVAILABLE:
+            img_b64 = self._create_placeholder_image(width, height, f"Advanced Cover\n{enhanced_prompt[:15]}…")
+            return {
+                "image_base64": img_b64,
+                "prompt": enhanced_prompt,
+                "style": style,
+                "width": width,
+                "height": height,
+                "type": "cover",
+                "placeholder": True,
+            }
+
+        await self.load_model(style, model_override=model_override)
+        if lora:
+            self.apply_lora(lora, lora_scale)
+
+        # Use enhanced prompt directly with prompt builder for negative prompts
+        if PROMPT_BUILDER_AVAILABLE:
+            pos, neg = ManhwaPromptBuilder.build_prompts(enhanced_prompt, style)
+            # Add cover-specific negative prompts
+            neg = neg + ", letters, words, text, watermark"
+        else:
+            pos = enhanced_prompt + ", manhwa style, webtoon style, korean comic art, digital art, beautiful composition, dramatic lighting"
+            neg = (
+                "lowres, blurry, jpeg artifacts, watermark, text, signature, bad anatomy, "
+                "bad proportions, extra fingers, extra limbs, missing limbs, deformed, worst quality, "
+                "letters, words, text, watermark"
+            )
+
+        base_w = self._round_to_8(max(256, int(width * 0.65)))
+        base_h = self._round_to_8(max(256, int(height * 0.65)))
+        upscale = max(1.0, width / base_w)
+
+        try:
+            img = self.pipeline(
+                prompt=pos,
+                negative_prompt=neg,
+                width=base_w,
+                height=base_h,
+                num_inference_steps=30,
+                guidance_scale=8.0,
+                generator=self._generator(seed),
+            ).images[0]
+        except RuntimeError as e:
+            if "CUDA out of memory" in str(e):
+                logger.warning("OOM on advanced cover pass; retrying smaller")
+                if hasattr(self.pipeline, "enable_attention_slicing"):
+                    self.pipeline.enable_attention_slicing("max")
+                torch.cuda.empty_cache()
+                base_w = self._round_to_8(int(base_w * 0.9))
+                base_h = self._round_to_8(int(base_h * 0.9))
+                img = self.pipeline(
+                    prompt=pos,
+                    negative_prompt=neg,
+                    width=base_w,
+                    height=base_h,
+                    num_inference_steps=26,
+                    guidance_scale=7.6,
+                    generator=self._generator(seed),
+                ).images[0]
+            else:
+                raise
+
+        if hires:
+            try:
+                img = self._hires_refine(
+                    img,
+                    pos,
+                    neg,
+                    denoise=0.34,
+                    upscale=upscale,
+                    seed=seed,
+                    steps=18,
+                    guidance_scale=7.8,
+                )
+            except RuntimeError as e:
+                if "CUDA out of memory" in str(e):
+                    logger.warning("OOM during advanced cover hi-res; returning first-pass image")
+                else:
+                    raise
+
+        return {
+            "image_base64": self._image_to_b64(img),
+            "prompt": pos,
+            "style": style,
+            "width": img.width,
+            "height": img.height,
+            "type": "cover",
+            "seed": seed,
+            "model": self.loaded_model_id,
+            "advanced": True,
+        }
+
     def get_style_options(self) -> List[str]:
         if PROMPT_BUILDER_AVAILABLE:
             return ManhwaPromptBuilder.get_style_options()
