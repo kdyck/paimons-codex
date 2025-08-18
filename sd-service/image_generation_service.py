@@ -80,19 +80,24 @@ class ImageGenerationService:
         # Manhwa-optimized models hierarchy: Anything v4.0 -> Counterfeit v3.0 -> SD v1.5
         self.model_id = "xyn-ai/anything-v4.0"  # Default: Anything v4.0 (best for anime/manhwa)
         self.fallback_models = [
+            "sinkinai/MeinaMix-v10",                   # High quality fallback
             "stabilityai/stable-diffusion-2-1",       # Fallback: SD 2.1 (reliable)
             "runwayml/stable-diffusion-v1-5"          # Last resort: SD v1.5
         ]
         self.manhwa_style_models = {
-            "anime": "xyn-ai/anything-v4.0",           # Anything v4.0 - best for anime/manhwa
-            "realistic": "stabilityai/stable-diffusion-2-1", # SD 2.1 - good for realistic manhwa
-            "chibi": "xyn-ai/anything-v4.0",           # Anything v4.0 - good for chibi style
-            "manhwa": "xyn-ai/anything-v4.0",          # Dedicated manhwa style
-            "webtoon": "xyn-ai/anything-v4.0",         # Korean webtoon style
+            "anime": "sinkinai/MeinaMix-v10",          # MeinaMix v10 - excellent for anime/manhwa and realistic style
+            "realistic": "xyn-ai/anything-v4.0",       # Anything v4.0 - versatile for realistic and artistic styles
+            "chibi": "sinkinai/MeinaMix-v10",          # MeinaMix v10 - excellent for chibi/cute and realistic style
+            "watercolor": "xyn-ai/anything-v4.0",      # Anything v4.0 - good for artistic watercolor style
+            "oil painting": "xyn-ai/anything-v4.0",   # Anything v4.0 - good for artistic oil painting style
+            "digital art": "sinkinai/MeinaMix-v10",        # MeinaMix v10 - excellent for digital art and realistic style
+            "manhwa": "sinkinai/MeinaMix-v10",         # MeinaMix v10 - excellent for manhwa and realistic style
+            "webtoon": "sinkinai/MeinaMix-v10",        # MeinaMix v10 - excellent for webtoon and realistic style
             # SDXL models for high-res generation
             "sdxl": "stabilityai/stable-diffusion-xl-base-1.0",
             "anime-xl": "cagliostrolab/animagine-xl-3.1",
             # Fallback options
+            "sd21": "stabilityai/stable-diffusion-2-1", # SD 2.1 fallback
             "sd15": "runwayml/stable-diffusion-v1-5",  # Explicit SD v1.5 option
         }
         self.loaded_style: Optional[str] = None
@@ -211,6 +216,7 @@ class ImageGenerationService:
             negative = (
                 "lowres, blurry, jpeg artifacts, watermark, text, signature, bad anatomy, "
                 "bad proportions, extra fingers, extra limbs, missing limbs, deformed, worst quality, "
+                "purple artifacts, purple blotches, color corruption, oversaturated, "
                 "scary, horror, creepy, nightmare, dark, evil, demon, monster, zombie, gore, blood, "
                 "violence, disturbing, unsettling, menacing, sinister, grotesque, macabre, "
                 "multiple faces, two faces, double face, duplicate, mutated hands, poorly drawn hands, "
@@ -329,6 +335,36 @@ class ImageGenerationService:
         logger.info(f"📥 Loading {model_id} to cache")
         
         dtype = torch.float16 if (self.device == "cuda") else torch.float32
+        
+        # Load proper VAE to fix purple blotches in Anything v4.0
+        vae = None
+        if "anything" in model_id.lower() or "xyn-ai" in model_id.lower():
+            try:
+                from diffusers import AutoencoderKL
+                logger.info("🎨 Loading proper VAE to fix purple blotches...")
+                
+                # Try multiple VAE options in order of preference
+                vae_options = [
+                    "stabilityai/sd-vae-ft-mse",     # MSE VAE - best for fixing purple artifacts
+                    "stabilityai/sd-vae-ft-ema",     # EMA VAE - alternative high quality
+                ]
+                
+                for vae_model in vae_options:
+                    try:
+                        vae = AutoencoderKL.from_pretrained(
+                            vae_model, 
+                            torch_dtype=dtype,
+                            cache_dir=self.model_cache_dir
+                        )
+                        logger.info(f"✅ Loaded {vae_model} VAE for better image quality")
+                        break
+                    except Exception as ve:
+                        logger.warning(f"Could not load {vae_model}: {ve}")
+                        continue
+                        
+            except Exception as e:
+                logger.warning(f"Could not load external VAE: {e}")
+        
         # Use NVMe SSD for model storage
         pipeline = StableDiffusionPipeline.from_pretrained(
             model_id,
@@ -336,6 +372,7 @@ class ImageGenerationService:
             safety_checker=None,
             requires_safety_checker=False,
             cache_dir=self.model_cache_dir,
+            vae=vae,  # Use proper VAE if loaded
             # SSD optimization: use local files when possible
             local_files_only=False,
             resume_download=True,
@@ -937,6 +974,8 @@ class ImageGenerationService:
         width: int = 832,
         height: int = 1216,
         seed: Optional[int] = None,
+        steps: int = 30,
+        cfg_scale: float = 9.5,
         lora: Optional[str] = None,
         lora_scale: float = 0.8,
         hires: bool = True,
@@ -959,31 +998,70 @@ class ImageGenerationService:
         if lora:
             self.apply_lora(lora, lora_scale)
 
-        # Use enhanced prompt directly with prompt builder for negative prompts
+        # Use enhanced prompt but add style-specific enhancements for consistency with character art
+        # This ensures cover art gets the same quality style prompts as character art
         if PROMPT_BUILDER_AVAILABLE:
-            pos, neg = ManhwaPromptBuilder.build_prompts(enhanced_prompt, style)
-            # Add cover-specific negative prompts
-            neg = neg + ", letters, words, text, watermark"
+            style_prompts = ManhwaPromptBuilder.STYLE_PROMPTS.get(style, ManhwaPromptBuilder.STYLE_PROMPTS['anime'])
+            pos = f"{enhanced_prompt}, {style_prompts}"
         else:
-            pos = enhanced_prompt + ", manhwa style, webtoon style, korean comic art, digital art, beautiful composition, dramatic lighting"
+            # Fallback style prompts if prompt builder not available
+            fallback_styles = {
+                "digital art": "video game art, game character design, concept art, 3D rendered, game illustration, digital game art, fantasy game style, RPG character art, high quality",
+                "anime": "anime style, manga art, cel-shaded, clean lines, vibrant colors",
+                "realistic": "realistic, photorealistic, high detail, soft lighting, cinematic lighting",
+                "chibi": "chibi style, super deformed, tiny body, big head, large sparkling eyes, cute anime style"
+            }
+            style_addition = fallback_styles.get(style, fallback_styles['anime'])
+            pos = f"{enhanced_prompt}, {style_addition}"
+        
+        # Build appropriate negative prompt for cover art with character consistency
+        character_consistency_negs = (
+            "mixed ethnicity on same person, inconsistent skin tone, "
+            "different skin color on face and body, partial ethnicity, "
+            "multiple races on one character, skin tone mismatch, "
+            "inconsistent character features, changing appearance"
+        )
+        
+        # Add ethnicity-specific negative prompts to prevent wrong ethnicities
+        ethnicity_negs = ""
+        if "black" in enhanced_prompt.lower():
+            ethnicity_negs = ", white skin, pale skin, light skin, caucasian features"
+        elif "white" in enhanced_prompt.lower() or "caucasian" in enhanced_prompt.lower():
+            ethnicity_negs = ", dark skin, black skin, african features"
+        elif "asian" in enhanced_prompt.lower():
+            ethnicity_negs = ", western features, non-asian features"
+        elif "latino" in enhanced_prompt.lower() or "hispanic" in enhanced_prompt.lower():
+            ethnicity_negs = ", pale skin, very dark skin, non-latino features"
+        
+        if PROMPT_BUILDER_AVAILABLE:
+            _, base_neg = ManhwaPromptBuilder.build_prompts("dummy", style)
+            neg = base_neg + f", {character_consistency_negs}{ethnicity_negs}, letters, words, text, watermark"
+        else:
             neg = (
                 "lowres, blurry, jpeg artifacts, watermark, text, signature, bad anatomy, "
                 "bad proportions, extra fingers, extra limbs, missing limbs, deformed, worst quality, "
-                "letters, words, text, watermark"
+                "genshin impact, genshin style, fantasy armor, elaborate costumes, unnatural hair colors, "
+                f"{character_consistency_negs}{ethnicity_negs}, letters, words, text, watermark"
             )
 
+        logger.info(f"🎨 Cover Art Style: {style}")
+        logger.info(f"📝 Enhanced prompt: {enhanced_prompt[:80]}...")
+        logger.info(f"✨ Final positive prompt: {pos[:120]}...")
+        logger.info(f"⚙️ Using CFG scale: {cfg_scale}, Steps: {steps}")
+        
         base_w = self._round_to_8(max(256, int(width * 0.65)))
         base_h = self._round_to_8(max(256, int(height * 0.65)))
         upscale = max(1.0, width / base_w)
 
         try:
+            # Use user-specified CFG scale and steps from advanced generator UI
             img = self.pipeline(
                 prompt=pos,
                 negative_prompt=neg,
                 width=base_w,
                 height=base_h,
-                num_inference_steps=30,
-                guidance_scale=8.0,
+                num_inference_steps=steps,
+                guidance_scale=cfg_scale,
                 generator=self._generator(seed),
             ).images[0]
         except RuntimeError as e:
@@ -999,8 +1077,8 @@ class ImageGenerationService:
                     negative_prompt=neg,
                     width=base_w,
                     height=base_h,
-                    num_inference_steps=26,
-                    guidance_scale=7.6,
+                    num_inference_steps=max(20, steps - 4),  # Reduce steps slightly for OOM recovery
+                    guidance_scale=max(7.0, cfg_scale - 0.5),  # Reduce CFG slightly for OOM recovery
                     generator=self._generator(seed),
                 ).images[0]
             else:

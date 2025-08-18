@@ -20,7 +20,12 @@ class ManhwaPromptBuilder:
     BASE_NEGATIVE = (
         "lowres, blurry, jpeg artifacts, watermark, text, signature, bad anatomy, "
         "bad proportions, extra fingers, extra limbs, missing limbs, deformed, worst quality, "
-        "genshin impact, genshin style, fantasy armor, elaborate costumes, unnatural hair colors"
+        "multiple faces, two faces, double face, duplicate, mutated hands, poorly drawn hands, "
+        "poorly drawn face, mutation, deformed face, ugly, bad eyes, crossed eyes, "
+        "extra heads, extra arms, extra legs, malformed limbs, fused fingers, too many fingers, "
+        "long neck, mutated, bad body, bad proportions, cloned face, gross proportions, "
+        "scary, horror, creepy, nightmare, dark, evil, demon, monster, zombie, gore, blood, "
+        "violence, disturbing, unsettling, menacing, sinister, grotesque, macabre"
     )
     
     MANHWA_STYLE = "manhwa style, webtoon style, korean comic art, digital art, beautiful composition, dramatic lighting"

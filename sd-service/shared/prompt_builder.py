@@ -12,9 +12,12 @@ class ManhwaPromptBuilder:
     """Builds optimized prompts for manhwa/webtoon style image generation."""
     
     STYLE_PROMPTS = {
-        "anime": "anime style, manga art, cel-shaded, clean lines, vibrant colors",
-        "realistic": "realistic, detailed, photorealistic, high quality", 
-        "chibi": "chibi style, cute, kawaii, simple, rounded features",
+        "anime": "anime style, manga art, cel-shaded, clean lines, vibrant colors, MeinaMix style, high quality anime",
+        "realistic": "realistic, photorealistic, high detail, soft lighting, cinematic lighting, perfect face, symmetrical face, delicate features, natural skin texture, volumetric lighting, natural eyes, realistic eyes", 
+        "chibi": "chibi style, super deformed, tiny body, big head, large sparkling eyes, rounded features, cute anime style, pastel color palette, soft lines, clean shading, kawaii, short, round, small body proportions, stubby limbs, adorable, wholesome, MeinaMix style",
+        "watercolor": "watercolor painting, soft brushstrokes, artistic, painted texture, traditional art style",
+        "oil painting": "oil painting style, thick brushstrokes, classical art, painted texture, fine art, museum quality",
+        "digital art": "video game art, game character design, concept art, 3D rendered, game illustration, digital game art, fantasy game style, RPG character art, MeinaMix style, high quality",
     }
     
     BASE_NEGATIVE = (
@@ -22,6 +25,15 @@ class ManhwaPromptBuilder:
         "bad proportions, extra fingers, extra limbs, missing limbs, deformed, worst quality, "
         "genshin impact, genshin style, fantasy armor, elaborate costumes, unnatural hair colors"
     )
+    
+    STYLE_NEGATIVE = {
+        "realistic": "anime eyes, unrealistic proportions, overexposed skin, cartoon lines, flat shading, bad anatomy, double face, blurry, weird eyes, distorted eyes, asymmetrical eyes, colored contacts, unnatural eye colors, glowing eyes, fantasy eyes, heterochromia, eye makeup, dramatic eye makeup, colored pupils, spiral eyes, star eyes, heart eyes, multiple pupils, fractured iris, kaleidoscope eyes, rainbow eyes, glitch eyes",
+        "chibi": "realistic proportions, tall body, normal sized head, small eyes, dark colors, harsh lines",
+        "anime": "realistic skin texture, photorealistic",
+        "digital art": "traditional art, painterly, sketch",
+        "watercolor": "digital art, 3d render, photorealistic",
+        "oil painting": "digital art, flat colors, cartoon style"
+    }
     
     MANHWA_STYLE = "manhwa style, webtoon style, korean comic art, digital art, beautiful composition, dramatic lighting"
     
@@ -40,7 +52,14 @@ class ManhwaPromptBuilder:
         style_prompt = cls.STYLE_PROMPTS.get(style, cls.STYLE_PROMPTS['anime'])
         positive = f"{prompt}, {style_prompt}, {cls.MANHWA_STYLE}"
         
-        return positive, cls.BASE_NEGATIVE
+        # Combine base negative with style-specific negatives
+        style_negative = cls.STYLE_NEGATIVE.get(style, "")
+        if style_negative:
+            negative = f"{cls.BASE_NEGATIVE}, {style_negative}"
+        else:
+            negative = cls.BASE_NEGATIVE
+        
+        return positive, negative
     
     @classmethod
     def build_character_prompts(cls, character_prompt: str, style: str = "anime") -> Tuple[str, str]:

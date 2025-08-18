@@ -156,6 +156,7 @@ services:
       - /mnt/d/sd-outputs:/nvme-outputs  
       - /mnt/d/sd-temp:/nvme-temp
       - ./lora-training:/lora-training
+      - ./training-data:/training-data
       - ./sd-service:/app
     devices:
       - nvidia.com/gpu=all

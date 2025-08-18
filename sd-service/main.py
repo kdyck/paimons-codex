@@ -180,6 +180,8 @@ class AdvancedCoverRequest(BaseModel):
     width: int = 832
     height: int = 1216
     seed: Optional[int] = None
+    steps: int = 30
+    cfg_scale: float = 9.5
     lora: Optional[str] = None
     lora_scale: float = 0.8
     hires: bool = True
@@ -308,6 +310,8 @@ async def generate_advanced_cover(request: AdvancedCoverRequest):
             width=request.width,
             height=request.height,
             seed=request.seed,
+            steps=request.steps,
+            cfg_scale=request.cfg_scale,
             lora=request.lora,
             lora_scale=request.lora_scale,
             hires=request.hires,

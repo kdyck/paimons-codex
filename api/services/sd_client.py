@@ -169,6 +169,9 @@ class StableDiffusionClient:
         width: int = 832,
         height: int = 1216,
         seed: Optional[int] = None,
+        steps: int = 30,
+        cfg_scale: float = 9.5,
+        model_override: Optional[str] = None,
         hires: bool = True
     ) -> Dict[str, Any]:
         """Generate advanced cover art with custom prompt using the SD service."""
@@ -179,6 +182,9 @@ class StableDiffusionClient:
                 "width": width,
                 "height": height,
                 "seed": seed,
+                "steps": steps,
+                "cfg_scale": cfg_scale,
+                "model_override": model_override,
                 "hires": hires
             }
             

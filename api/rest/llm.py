@@ -283,12 +283,37 @@ async def generate_full_manhwa(story_request: StoryGenerationRequest):
         # Generate cover art with advanced parameters if available
         if story_request.advanced_config and story_request.advanced_config.get("cover_art"):
             cover_config = story_request.advanced_config["cover_art"]
+            character_config = story_request.advanced_config.get("characters", {}).get("main_character", {})
             
-            # Create enhanced cover art request
+            # Build enhanced character description for cover art
+            enhanced_character_parts = [main_character]
+            
+            # Add character details from advanced config
+            if character_config.get("ethnicity") and character_config["ethnicity"] not in ["diverse", "any"]:
+                enhanced_character_parts.append(f"{character_config['ethnicity']} character")
+            
+            if character_config.get("gender") and character_config["gender"] != "any":
+                enhanced_character_parts.append(character_config["gender"])
+            
+            if character_config.get("age"):
+                age = character_config["age"]
+                if age < 16:
+                    enhanced_character_parts.append("young character")
+                elif age > 25:
+                    enhanced_character_parts.append("mature character")
+            
+            if character_config.get("appearance"):
+                enhanced_character_parts.append(character_config["appearance"])
+            
+            enhanced_main_character = ", ".join(enhanced_character_parts)
+            
+            logger.info(f"Enhanced main character for cover art: {enhanced_main_character}")
+            
+            # Create enhanced cover art request with technical parameters
             cover_art = await image_service.generate_advanced_cover_art(
                 title=story["title"],
                 genre=genre,
-                main_character=main_character,
+                main_character=enhanced_main_character,
                 style=cover_config.get("style", art_style),
                 composition=cover_config.get("composition", "character focus"),
                 mood=cover_config.get("mood", "dramatic"),
@@ -298,15 +323,43 @@ async def generate_full_manhwa(story_request: StoryGenerationRequest):
                 background_type=cover_config.get("background_type", "detailed"),
                 effects=cover_config.get("effects", []),
                 custom_prompt=cover_config.get("custom_prompt", ""),
-                resolution=cover_config.get("resolution", "832x1216")
+                resolution=cover_config.get("resolution", "832x1216"),
+                # Technical parameters from advanced config
+                seed=tech_config.get("seed"),
+                steps=tech_config.get("steps", 30),
+                cfg_scale=tech_config.get("cfg_scale", 9.5),
+                model_override=tech_config.get("model_override"),
+                hires=tech_config.get("enable_upscaling", True)
             )
         else:
-            # Generate standard cover art
+            # Generate standard cover art (but still use enhanced character if available)
+            cover_main_character = main_character
+            if story_request.advanced_config:
+                character_config = story_request.advanced_config.get("characters", {}).get("main_character", {})
+                if character_config:
+                    # Build enhanced character description for standard cover art too
+                    enhanced_character_parts = [main_character]
+                    
+                    if character_config.get("ethnicity") and character_config["ethnicity"] not in ["diverse", "any"]:
+                        enhanced_character_parts.append(f"{character_config['ethnicity']} character")
+                    
+                    if character_config.get("gender") and character_config["gender"] != "any":
+                        enhanced_character_parts.append(character_config["gender"])
+                    
+                    if character_config.get("appearance"):
+                        enhanced_character_parts.append(character_config["appearance"])
+                    
+                    cover_main_character = ", ".join(enhanced_character_parts)
+            
             cover_art = await image_service.generate_cover_art(
                 title=story["title"],
                 genre=genre,
-                main_character=main_character,
-                style=art_style
+                main_character=cover_main_character,
+                style=art_style,
+                # Add technical parameters if available
+                seed=tech_config.get("seed") if story_request.advanced_config else None,
+                hires=tech_config.get("enable_upscaling", True) if story_request.advanced_config else True,
+                model_override=tech_config.get("model_override") if story_request.advanced_config else None
             )
         
         # Generate character sheet and art

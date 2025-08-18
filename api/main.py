@@ -5,7 +5,6 @@ from contextlib import asynccontextmanager
 from rest.manhwa import router as manhwa_router
 from rest.search import router as search_router
 from rest.llm import router as llm_router
-from rest.images import router as images_router
 from rest.manhwa_import import router as import_router
 import os
 import logging
@@ -88,7 +87,6 @@ if os.path.exists(assets_path):
 app.include_router(manhwa_router, prefix="/api/v1/manhwa", tags=["manhwa"])
 app.include_router(search_router, prefix="/api/v1/search", tags=["search"])
 app.include_router(llm_router, prefix="/api/v1/llm", tags=["llm"])
-app.include_router(images_router, prefix="/api/v1/images", tags=["images"])
 app.include_router(import_router, prefix="/api/v1/admin", tags=["admin"])
 
 @app.get("/health")

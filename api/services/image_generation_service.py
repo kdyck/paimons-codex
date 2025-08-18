@@ -329,6 +329,9 @@ class ImageGenerationService:
         custom_prompt: str = "",
         resolution: str = "832x1216",
         seed: Optional[int] = None,
+        steps: int = 30,
+        cfg_scale: float = 9.5,
+        model_override: Optional[str] = None,
         hires: bool = True,
     ) -> Dict[str, Any]:
         """Generate advanced cover art with detailed customization options."""
@@ -357,12 +360,13 @@ class ImageGenerationService:
             }
 
         try:
-            # Build advanced prompt
+            # Build advanced prompt with enhanced character details
+            # Prioritize character description at the beginning for better consistency
             prompt_parts = [
-                f"manhwa cover art",
+                f"manhwa cover art featuring {main_character}",  # Lead with character description
+                f"consistent character design, same person throughout",  # Emphasize consistency
                 f"{title}",
                 f"{genre} theme",
-                f"featuring {main_character}",
                 f"{style} style",
                 f"{composition}",
                 f"{mood} mood",
@@ -370,6 +374,18 @@ class ImageGenerationService:
                 f"{character_pose} pose",
                 f"{lighting} lighting",
             ]
+            
+            # Add ethnicity-specific enhancement if character has specific ethnicity
+            if "black" in main_character.lower():
+                prompt_parts.insert(2, "dark skin tone, African features, consistent dark complexion")
+            elif "latino" in main_character.lower() or "hispanic" in main_character.lower():
+                prompt_parts.insert(2, "latino features, warm skin tone, consistent complexion")
+            elif "east asian" in main_character.lower() or "asian" in main_character.lower():
+                prompt_parts.insert(2, "east asian features, consistent skin tone")
+            elif "south asian" in main_character.lower():
+                prompt_parts.insert(2, "south asian features, brown skin tone, consistent complexion")
+            elif "middle eastern" in main_character.lower():
+                prompt_parts.insert(2, "middle eastern features, olive skin tone, consistent complexion")
             
             if background_type != "simple":
                 prompt_parts.append(f"{background_type} background")
@@ -384,6 +400,8 @@ class ImageGenerationService:
             
             enhanced_prompt = ", ".join(prompt_parts)
             
+            logger.info(f"Generated enhanced cover prompt: {enhanced_prompt}")
+            
             sd_client = await get_sd_client()
             result = await sd_client.generate_advanced_cover_art(
                 enhanced_prompt=enhanced_prompt,
@@ -391,6 +409,9 @@ class ImageGenerationService:
                 width=width,
                 height=height,
                 seed=seed,
+                steps=steps,
+                cfg_scale=cfg_scale,
+                model_override=model_override,
                 hires=hires
             )
             

@@ -349,15 +349,29 @@ interface ManhwaConfig {
 
 const AdvancedManhwaGenerator: React.FC<AdvancedManhwaGeneratorProps> = ({ onGenerate, generating }) => {
   const [activeTab, setActiveTab] = useState('story');
-  const [config, setConfig] = useState<ManhwaConfig>({
+  
+  // Load preset from localStorage if available
+  const loadPreset = (): ManhwaConfig => {
+    try {
+      const saved = localStorage.getItem('paimons-manhwa-preset');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (error) {
+      console.warn('Failed to load preset:', error);
+    }
+    return getDefaultConfig();
+  };
+
+  const getDefaultConfig = (): ManhwaConfig => ({
     // Story Configuration
     story: {
       title: '',
-      genres: ['fantasy'],
-      setting: 'modern city',
+      genres: ['fantasy', 'romance'],
+      setting: 'medieval kingdom',
       tone: 'dramatic',
       length: 'medium',
-      maturity_rating: 'teen',
+      maturity_rating: 'adult',
       plot_outline: '',
       themes: ['friendship', 'growth'],
       pacing: 'balanced'
@@ -367,7 +381,7 @@ const AdvancedManhwaGenerator: React.FC<AdvancedManhwaGeneratorProps> = ({ onGen
     characters: {
       main_character: {
         name: '',
-        age: 18,
+        age: 28,
         gender: 'any',
         ethnicity: 'diverse',
         personality: 'determined',
@@ -412,36 +426,57 @@ const AdvancedManhwaGenerator: React.FC<AdvancedManhwaGeneratorProps> = ({ onGen
     }
   });
 
+  const [config, setConfig] = useState<ManhwaConfig>(loadPreset);
+
+  // Save preset to localStorage whenever config changes
+  const savePreset = (newConfig: ManhwaConfig) => {
+    try {
+      localStorage.setItem('paimons-manhwa-preset', JSON.stringify(newConfig));
+    } catch (error) {
+      console.warn('Failed to save preset:', error);
+    }
+  };
+
   const updateConfig = (section: keyof ManhwaConfig, field: string, value: any) => {
-    setConfig(prev => ({
-      ...prev,
+    const newConfig = {
+      ...config,
       [section]: {
-        ...(prev[section] as any),
+        ...(config[section] as any),
         [field]: value
       }
-    }));
+    };
+    setConfig(newConfig);
+    savePreset(newConfig);
   };
 
   const updateNestedConfig = (section: keyof ManhwaConfig, subsection: string, field: string, value: any) => {
-    setConfig(prev => ({
-      ...prev,
+    const newConfig = {
+      ...config,
       [section]: {
-        ...(prev[section] as any),
+        ...(config[section] as any),
         [subsection]: {
-          ...((prev[section] as any)[subsection]),
+          ...((config[section] as any)[subsection]),
           [field]: value
         }
       }
-    }));
+    };
+    setConfig(newConfig);
+    savePreset(newConfig);
   };
 
   const toggleArrayValue = (section: keyof ManhwaConfig, field: string, value: string) => {
     const current = (config[section] as any)[field] as string[];
-    if (current.includes(value)) {
-      updateConfig(section, field, current.filter((item: string) => item !== value));
-    } else {
-      updateConfig(section, field, [...current, value]);
-    }
+    const newArray = current.includes(value) 
+      ? current.filter((item: string) => item !== value)
+      : [...current, value];
+    updateConfig(section, field, newArray);
+  };
+
+  // Reset to default configuration
+  const resetToDefaults = () => {
+    const defaultConfig = getDefaultConfig();
+    setConfig(defaultConfig);
+    savePreset(defaultConfig);
   };
 
   const generatePreviewPrompt = () => {
@@ -450,16 +485,33 @@ const AdvancedManhwaGenerator: React.FC<AdvancedManhwaGeneratorProps> = ({ onGen
     
     let prompt = `manhwa cover art, ${cover_art.style} style, ${cover_art.composition}, ${cover_art.mood} mood, ${cover_art.color_scheme} colors`;
     
+    // Character details with auto-ethnicity inheritance
     if (character.name) {
       prompt += `, featuring ${character.name}`;
     }
     
-    if (character.ethnicity !== 'any') {
-      prompt += `, ${character.ethnicity} features`;
+    // Auto-include character ethnicity in cover art
+    if (character.ethnicity && character.ethnicity !== 'diverse' && character.ethnicity !== 'any') {
+      prompt += `, ${character.ethnicity} character`;
     }
     
+    // Include character appearance details
     if (character.appearance) {
       prompt += `, ${character.appearance}`;
+    }
+    
+    // Add age context if specified
+    if (character.age && character.age !== 18) {
+      if (character.age < 16) {
+        prompt += `, young character`;
+      } else if (character.age > 25) {
+        prompt += `, mature character`;
+      }
+    }
+    
+    // Gender specification
+    if (character.gender && character.gender !== 'any') {
+      prompt += `, ${character.gender}`;
     }
     
     prompt += `, ${cover_art.character_pose} pose, ${cover_art.lighting} lighting`;
@@ -481,23 +533,76 @@ const AdvancedManhwaGenerator: React.FC<AdvancedManhwaGeneratorProps> = ({ onGen
 
   return (
     <Container>
-      <Title>🎨 Advanced Manhwa Generator</Title>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+        <Title style={{ margin: 0 }}>🎨 Advanced Manhwa Generator</Title>
+        
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <Button 
+            onClick={resetToDefaults}
+            style={{ 
+              padding: '0.5rem 1rem', 
+              fontSize: '0.8rem',
+              background: 'rgba(255, 255, 255, 0.1)',
+              color: 'rgba(255, 255, 255, 0.8)'
+            }}
+            type="button"
+          >
+            🔄 Reset to Defaults
+          </Button>
+          <div style={{ 
+            fontSize: '0.8rem', 
+            color: 'rgba(255, 255, 255, 0.6)',
+            display: 'flex',
+            alignItems: 'center',
+            padding: '0.5rem 1rem',
+            background: 'rgba(255, 255, 255, 0.05)',
+            borderRadius: '8px'
+          }}>
+            💾 Auto-saves as preset
+          </div>
+        </div>
+      </div>
       
       <TabContainer>
         <Tab $active={activeTab === 'story'} onClick={() => setActiveTab('story')}>
-          📖 Story
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '0.5rem' }}>
+            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
+            <path d="M9 10h6"/>
+            <path d="M9 14h6"/>
+          </svg>
+          Story
         </Tab>
         <Tab $active={activeTab === 'characters'} onClick={() => setActiveTab('characters')}>
-          👤 Characters
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '0.5rem' }}>
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          Characters
         </Tab>
         <Tab $active={activeTab === 'cover'} onClick={() => setActiveTab('cover')}>
-          🎨 Cover Art
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '0.5rem' }}>
+            <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
+            <circle cx="9" cy="9" r="2"/>
+            <path d="M21 15l-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+          </svg>
+          Cover Art
         </Tab>
         <Tab $active={activeTab === 'technical'} onClick={() => setActiveTab('technical')}>
-          ⚙️ Technical
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '0.5rem' }}>
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 1v6M12 17v6"/>
+            <path d="m4.2 4.2 4.2 4.2M15.6 15.6l4.2 4.2"/>
+            <path d="M1 12h6M17 12h6"/>
+            <path d="m4.2 19.8 4.2-4.2M15.6 8.4l4.2-4.2"/>
+          </svg>
+          Technical
         </Tab>
         <Tab $active={activeTab === 'preview'} onClick={() => setActiveTab('preview')}>
-          👁️ Preview
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '0.5rem' }}>
+            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          Preview
         </Tab>
       </TabContainer>
 
@@ -589,6 +694,36 @@ const AdvancedManhwaGenerator: React.FC<AdvancedManhwaGeneratorProps> = ({ onGen
                 </CheckboxLabel>
               ))}
             </CheckboxGrid>
+          </FormField>
+
+          <FormField style={{ gridColumn: '1 / -1' }}>
+            <Label>Themes</Label>
+            <CheckboxGrid>
+              {['friendship', 'growth', 'love', 'betrayal', 'redemption', 'power', 'family', 'justice', 'survival', 'identity', 'sacrifice', 'revenge', 'forgiveness', 'loyalty'].map(theme => (
+                <CheckboxLabel key={theme}>
+                  <Checkbox
+                    type="checkbox"
+                    checked={config.story.themes.includes(theme)}
+                    onChange={() => toggleArrayValue('story', 'themes', theme)}
+                  />
+                  {theme.charAt(0).toUpperCase() + theme.slice(1)}
+                </CheckboxLabel>
+              ))}
+            </CheckboxGrid>
+          </FormField>
+
+          <FormField>
+            <Label>Story Pacing</Label>
+            <Select
+              value={config.story.pacing}
+              onChange={(e) => updateConfig('story', 'pacing', e.target.value)}
+            >
+              <option value="slow burn">Slow Burn</option>
+              <option value="balanced">Balanced</option>
+              <option value="fast-paced">Fast-Paced</option>
+              <option value="episodic">Episodic</option>
+              <option value="intense">Intense</option>
+            </Select>
           </FormField>
 
           <FormField style={{ gridColumn: '1 / -1' }}>
@@ -707,11 +842,113 @@ const AdvancedManhwaGenerator: React.FC<AdvancedManhwaGeneratorProps> = ({ onGen
               rows={2}
             />
           </FormField>
+
+          <div style={{ gridColumn: '1 / -1', marginTop: '2rem', paddingTop: '2rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
+            <PreviewTitle>Supporting Characters</PreviewTitle>
+            
+            <FormField>
+              <Label>Supporting Character Name</Label>
+              <Input
+                value={config.characters.supporting_characters[0]?.name || ''}
+                onChange={(e) => {
+                  const newSupportingChars = [...config.characters.supporting_characters];
+                  if (!newSupportingChars[0]) newSupportingChars[0] = { name: '', role: 'best friend', ethnicity: 'diverse', personality: 'loyal' };
+                  newSupportingChars[0].name = e.target.value;
+                  updateConfig('characters', 'supporting_characters', newSupportingChars);
+                }}
+                placeholder="Supporting character's name"
+              />
+            </FormField>
+
+            <FormField>
+              <Label>Role in Story</Label>
+              <Select
+                value={config.characters.supporting_characters[0]?.role || 'best friend'}
+                onChange={(e) => {
+                  const newSupportingChars = [...config.characters.supporting_characters];
+                  if (!newSupportingChars[0]) newSupportingChars[0] = { name: '', role: 'best friend', ethnicity: 'diverse', personality: 'loyal' };
+                  newSupportingChars[0].role = e.target.value;
+                  updateConfig('characters', 'supporting_characters', newSupportingChars);
+                }}
+              >
+                <option value="best friend">Best Friend</option>
+                <option value="mentor">Mentor</option>
+                <option value="rival">Rival</option>
+                <option value="love interest">Love Interest</option>
+                <option value="sidekick">Sidekick</option>
+                <option value="antagonist">Antagonist</option>
+                <option value="family member">Family Member</option>
+                <option value="ally">Ally</option>
+              </Select>
+            </FormField>
+
+            <FormField>
+              <Label>Ethnicity</Label>
+              <Select
+                value={config.characters.supporting_characters[0]?.ethnicity || 'diverse'}
+                onChange={(e) => {
+                  const newSupportingChars = [...config.characters.supporting_characters];
+                  if (!newSupportingChars[0]) newSupportingChars[0] = { name: '', role: 'best friend', ethnicity: 'diverse', personality: 'loyal' };
+                  newSupportingChars[0].ethnicity = e.target.value;
+                  updateConfig('characters', 'supporting_characters', newSupportingChars);
+                }}
+              >
+                <option value="diverse">Diverse/Random</option>
+                <option value="east asian">East Asian</option>
+                <option value="black">Black/African</option>
+                <option value="latino">Latino/Hispanic</option>
+                <option value="white">White/Caucasian</option>
+                <option value="middle eastern">Middle Eastern</option>
+                <option value="south asian">South Asian</option>
+                <option value="mixed">Mixed Ethnicity</option>
+              </Select>
+            </FormField>
+
+            <FormField>
+              <Label>Personality</Label>
+              <Select
+                value={config.characters.supporting_characters[0]?.personality || 'loyal'}
+                onChange={(e) => {
+                  const newSupportingChars = [...config.characters.supporting_characters];
+                  if (!newSupportingChars[0]) newSupportingChars[0] = { name: '', role: 'best friend', ethnicity: 'diverse', personality: 'loyal' };
+                  newSupportingChars[0].personality = e.target.value;
+                  updateConfig('characters', 'supporting_characters', newSupportingChars);
+                }}
+              >
+                <option value="loyal">Loyal</option>
+                <option value="witty">Witty</option>
+                <option value="protective">Protective</option>
+                <option value="competitive">Competitive</option>
+                <option value="wise">Wise</option>
+                <option value="mischievous">Mischievous</option>
+                <option value="caring">Caring</option>
+                <option value="ambitious">Ambitious</option>
+                <option value="mysterious">Mysterious</option>
+              </Select>
+            </FormField>
+          </div>
         </FormGrid>
       </TabContent>
 
       {/* Cover Art Configuration */}
       <TabContent $show={activeTab === 'cover'}>
+        <div style={{ 
+          background: 'rgba(102, 126, 234, 0.1)', 
+          border: '1px solid rgba(102, 126, 234, 0.3)',
+          borderRadius: '8px',
+          padding: '1rem',
+          marginBottom: '1.5rem',
+          fontSize: '0.9rem',
+          color: 'rgba(255, 255, 255, 0.8)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+            <span style={{ fontSize: '1.2rem' }}>🔗</span>
+            <strong>Character-Linked Cover Art</strong>
+          </div>
+          Your cover art will automatically inherit character details (ethnicity, gender, age, appearance) from the Character tab. 
+          This ensures your cover matches your main character perfectly!
+        </div>
+        
         <FormGrid>
           <FormField>
             <Label>Art Style</Label>
@@ -920,10 +1157,24 @@ const AdvancedManhwaGenerator: React.FC<AdvancedManhwaGeneratorProps> = ({ onGen
               onChange={(e) => updateConfig('technical', 'model_override', e.target.value || null)}
             >
               <option value="">Use Default</option>
-              <option value="xyn-ai/anything-v4.0">Anything v4.0</option>
-              <option value="stabilityai/stable-diffusion-2-1">SD 2.1</option>
+              <option value="xyn-ai/anything-v4.0">Anything v4.0 (Anime)</option>
+              <option value="sinkinai/MeinaMix-v10">MeinaMix v10 (Realistic)</option>
               <option value="runwayml/stable-diffusion-v1-5">SD 1.5</option>
             </Select>
+          </FormField>
+
+          <FormField>
+            <Label>Batch Size</Label>
+            <RangeContainer>
+              <RangeInput
+                type="range"
+                min="1"
+                max="4"
+                value={config.technical.batch_size}
+                onChange={(e) => updateConfig('technical', 'batch_size', parseInt(e.target.value))}
+              />
+              <RangeValue>{config.technical.batch_size} image{config.technical.batch_size > 1 ? 's' : ''}</RangeValue>
+            </RangeContainer>
           </FormField>
 
           <CheckboxLabel>
@@ -949,12 +1200,53 @@ const AdvancedManhwaGenerator: React.FC<AdvancedManhwaGeneratorProps> = ({ onGen
           <PreviewText>
 {`Story: ${config.story.title || 'Untitled'}
 Genres: ${config.story.genres.join(', ')}
+Themes: ${config.story.themes.join(', ')}
+Pacing: ${config.story.pacing}
 Setting: ${config.story.setting}
 Main Character: ${config.characters.main_character.name || 'Unnamed'} (${config.characters.main_character.age}, ${config.characters.main_character.ethnicity}, ${config.characters.main_character.personality})
+Supporting Character: ${config.characters.supporting_characters[0]?.name || 'None'} (${config.characters.supporting_characters[0]?.role || 'N/A'})
 Cover Style: ${config.cover_art.style} - ${config.cover_art.composition}
 Resolution: ${config.cover_art.resolution}
-Steps: ${config.technical.steps}, CFG: ${config.technical.cfg_scale}`}
+Steps: ${config.technical.steps}, CFG: ${config.technical.cfg_scale}, Batch: ${config.technical.batch_size}`}
           </PreviewText>
+        </PreviewSection>
+
+        <PreviewSection>
+          <PreviewTitle>🔗 Character-to-Cover Inheritance</PreviewTitle>
+          <div style={{ fontSize: '0.9rem', lineHeight: '1.6' }}>
+            <div style={{ marginBottom: '1rem', padding: '0.75rem', background: 'rgba(102, 126, 234, 0.1)', borderRadius: '8px' }}>
+              <strong>Character Details Being Inherited:</strong>
+            </div>
+            <div style={{ display: 'grid', gap: '0.5rem' }}>
+              {config.characters.main_character.name && (
+                <div>• <strong>Name:</strong> {config.characters.main_character.name}</div>
+              )}
+              {config.characters.main_character.ethnicity !== 'diverse' && (
+                <div>• <strong>Ethnicity:</strong> {config.characters.main_character.ethnicity}</div>
+              )}
+              {config.characters.main_character.gender !== 'any' && (
+                <div>• <strong>Gender:</strong> {config.characters.main_character.gender}</div>
+              )}
+              {config.characters.main_character.age !== 18 && (
+                <div>• <strong>Age Context:</strong> {
+                  config.characters.main_character.age < 16 ? 'Young character' :
+                  config.characters.main_character.age > 25 ? 'Mature character' :
+                  'Standard age'
+                }</div>
+              )}
+              {config.characters.main_character.appearance && (
+                <div>• <strong>Appearance:</strong> {config.characters.main_character.appearance}</div>
+              )}
+              {(!config.characters.main_character.name && 
+                config.characters.main_character.ethnicity === 'diverse' && 
+                config.characters.main_character.gender === 'any' && 
+                !config.characters.main_character.appearance) && (
+                <div style={{ fontStyle: 'italic', opacity: 0.7 }}>
+                  No specific character details set - cover will use generic character description
+                </div>
+              )}
+            </div>
+          </div>
         </PreviewSection>
       </TabContent>
 

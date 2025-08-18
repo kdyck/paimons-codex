@@ -402,6 +402,40 @@ const Title = styled.h1`
   -webkit-text-fill-color: transparent;
 `;
 
+const Tooltip = styled.div<{ $show: boolean }>`
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  z-index: 1000;
+  opacity: ${props => props.$show ? 1 : 0};
+  visibility: ${props => props.$show ? 'visible' : 'hidden'};
+  transition: all 0.2s ease;
+  pointer-events: none;
+  margin-bottom: 5px;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 4px solid transparent;
+    border-top-color: rgba(0, 0, 0, 0.9);
+  }
+`;
+
+const TooltipContainer = styled.div`
+  position: relative;
+  display: inline-block;
+`;
+
 const Button = styled.button`
   background: linear-gradient(135deg, #667eea, #764ba2);
   color: white;
@@ -857,6 +891,16 @@ const AdminPage: React.FC = () => {
   const [success, setSuccess] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [tooltips, setTooltips] = useState<{[key: string]: boolean}>({});
+
+  // Tooltip helpers
+  const showTooltip = (key: string) => {
+    setTooltips(prev => ({ ...prev, [key]: true }));
+  };
+
+  const hideTooltip = (key: string) => {
+    setTooltips(prev => ({ ...prev, [key]: false }));
+  };
 
   // Manhwa Generation States
   const [generating, setGenerating] = useState(false);
@@ -1150,7 +1194,18 @@ const AdminPage: React.FC = () => {
     <Container>
       <Header>
         <Title>Manhwa Administration</Title>
-        <Button onClick={handleCreateNew}>Create New Manhwa</Button>
+        <TooltipContainer>
+          <Button 
+            onClick={handleCreateNew}
+            onMouseEnter={() => showTooltip('createNew')}
+            onMouseLeave={() => hideTooltip('createNew')}
+          >
+            Create New Manhwa
+          </Button>
+          <Tooltip $show={tooltips.createNew}>
+            Add a new manhwa entry manually to the database
+          </Tooltip>
+        </TooltipContainer>
       </Header>
 
       {error && <ErrorMessage>{error}</ErrorMessage>}
@@ -1158,53 +1213,84 @@ const AdminPage: React.FC = () => {
 
       {/* Tab Navigation */}
       <TabContainer>
-        <Tab 
-          $active={activeTab === 'generator'} 
-          onClick={() => setActiveTab('generator')}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M8 2v4"/>
-            <path d="M16 2v4"/>
-            <rect width="18" height="18" x="3" y="4" rx="2"/>
-            <path d="M3 10h18"/>
-            <path d="m9 16 2 2 4-4"/>
-          </svg>
-          <span>AI Generator</span>
-        </Tab>
-        <Tab 
-          $active={activeTab === 'advanced'} 
-          onClick={() => setActiveTab('advanced')}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="3"/>
-            <path d="M12 1v6M12 17v6"/>
-            <path d="m4.2 4.2 4.2 4.2M15.6 15.6l4.2 4.2"/>
-            <path d="M1 12h6M17 12h6"/>
-            <path d="m4.2 19.8 4.2-4.2M15.6 8.4l4.2-4.2"/>
-          </svg>
-          <span>Advanced Generator</span>
-        </Tab>
-        <Tab 
-          $active={activeTab === 'generated'} 
-          onClick={() => setActiveTab('generated')}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
-            <circle cx="12" cy="13" r="3"/>
-          </svg>
-          <span>Generated Manhwa</span>
-        </Tab>
-        <Tab 
-          $active={activeTab === 'management'} 
-          onClick={() => setActiveTab('management')}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
-            <path d="M9 10h6"/>
-            <path d="M9 14h6"/>
-          </svg>
-          <span>Manhwa Management</span>
-        </Tab>
+        <TooltipContainer>
+          <Tab 
+            $active={activeTab === 'generator'} 
+            onClick={() => setActiveTab('generator')}
+            onMouseEnter={() => showTooltip('generatorTab')}
+            onMouseLeave={() => hideTooltip('generatorTab')}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M8 2v4"/>
+              <path d="M16 2v4"/>
+              <rect width="18" height="18" x="3" y="4" rx="2"/>
+              <path d="M3 10h18"/>
+              <path d="m9 16 2 2 4-4"/>
+            </svg>
+            <span>AI Generator</span>
+          </Tab>
+          <Tooltip $show={tooltips.generatorTab}>
+            Simple AI-powered manhwa generation with basic settings
+          </Tooltip>
+        </TooltipContainer>
+        
+        <TooltipContainer>
+          <Tab 
+            $active={activeTab === 'advanced'} 
+            onClick={() => setActiveTab('advanced')}
+            onMouseEnter={() => showTooltip('advancedTab')}
+            onMouseLeave={() => hideTooltip('advancedTab')}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M12 1v6M12 17v6"/>
+              <path d="m4.2 4.2 4.2 4.2M15.6 15.6l4.2 4.2"/>
+              <path d="M1 12h6M17 12h6"/>
+              <path d="m4.2 19.8 4.2-4.2M15.6 8.4l4.2-4.2"/>
+            </svg>
+            <span>Advanced Generator</span>
+          </Tab>
+          <Tooltip $show={tooltips.advancedTab}>
+            Full control generator with detailed character, story, and cover art customization
+          </Tooltip>
+        </TooltipContainer>
+        
+        <TooltipContainer>
+          <Tab 
+            $active={activeTab === 'generated'} 
+            onClick={() => setActiveTab('generated')}
+            onMouseEnter={() => showTooltip('generatedTab')}
+            onMouseLeave={() => hideTooltip('generatedTab')}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+              <circle cx="12" cy="13" r="3"/>
+            </svg>
+            <span>Generated Manhwa</span>
+          </Tab>
+          <Tooltip $show={tooltips.generatedTab}>
+            View and download your AI-generated manhwa content and artwork
+          </Tooltip>
+        </TooltipContainer>
+        
+        <TooltipContainer>
+          <Tab 
+            $active={activeTab === 'management'} 
+            onClick={() => setActiveTab('management')}
+            onMouseEnter={() => showTooltip('managementTab')}
+            onMouseLeave={() => hideTooltip('managementTab')}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
+              <path d="M9 10h6"/>
+              <path d="M9 14h6"/>
+            </svg>
+            <span>Manhwa Management</span>
+          </Tab>
+          <Tooltip $show={tooltips.managementTab}>
+            Manage existing manhwa entries, search, edit, and delete records
+          </Tooltip>
+        </TooltipContainer>
       </TabContainer>
 
       {/* AI Manhwa Generator Tab */}
@@ -1310,12 +1396,19 @@ const AdminPage: React.FC = () => {
           </GeneratorField>
         </GeneratorForm>
 
-        <GenerateButton
-          onClick={generateManhwa}
-          disabled={generating}
-        >
-          {generating ? 'Generating...' : '✨ Generate Complete Manhwa'}
-        </GenerateButton>
+        <TooltipContainer style={{ display: 'flex', justifyContent: 'center' }}>
+          <GenerateButton
+            onClick={generateManhwa}
+            disabled={generating}
+            onMouseEnter={() => showTooltip('generateButton')}
+            onMouseLeave={() => hideTooltip('generateButton')}
+          >
+            {generating ? 'Generating...' : '✨ Generate Complete Manhwa'}
+          </GenerateButton>
+          <Tooltip $show={tooltips.generateButton}>
+            Generate a complete manhwa with story, cover art, and character artwork using AI
+          </Tooltip>
+        </TooltipContainer>
 
         {generating && (
           <GenerationProgress>
@@ -1355,9 +1448,31 @@ const AdminPage: React.FC = () => {
                   src={`data:image/png;base64,${generatedResult.cover_art.image_base64}`} 
                   alt="Generated cover art" 
                 />
-                <p style={{ fontSize: '0.8rem', opacity: 0.7, margin: '0.5rem 0 0 0' }}>
-                  Prompt: {generatedResult.cover_art.prompt}
-                </p>
+                <div style={{ fontSize: '0.8rem', opacity: 0.7, margin: '0.5rem 0 0 0' }}>
+                  <p style={{ margin: '0 0 0.25rem 0' }}>
+                    Prompt: {generatedResult.cover_art.prompt}
+                  </p>
+                  {generatedResult.cover_art.seed && (
+                    <p style={{ margin: '0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      Seed: {generatedResult.cover_art.seed}
+                      <button 
+                        onClick={() => navigator.clipboard.writeText(generatedResult.cover_art.seed.toString())}
+                        style={{ 
+                          background: 'none', 
+                          border: '1px solid rgba(255,255,255,0.3)', 
+                          borderRadius: '4px',
+                          padding: '2px 6px',
+                          fontSize: '0.7rem',
+                          cursor: 'pointer',
+                          color: 'inherit'
+                        }}
+                        title="Copy seed to clipboard"
+                      >
+                        📋
+                      </button>
+                    </p>
+                  )}
+                </div>
               </div>
             )}
 
@@ -1605,12 +1720,32 @@ const AdminPage: React.FC = () => {
                     <Td style={{ textTransform: 'capitalize' }}>{manhwa.status}</Td>
                     <Td>
                       <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <Button onClick={() => handleEdit(manhwa)} style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}>
-                          Edit
-                        </Button>
-                        <DeleteButton onClick={() => handleDelete(manhwa)} style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}>
-                          Delete
-                        </DeleteButton>
+                        <TooltipContainer>
+                          <Button 
+                            onClick={() => handleEdit(manhwa)} 
+                            style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
+                            onMouseEnter={() => showTooltip(`edit-${manhwa.id}`)}
+                            onMouseLeave={() => hideTooltip(`edit-${manhwa.id}`)}
+                          >
+                            Edit
+                          </Button>
+                          <Tooltip $show={tooltips[`edit-${manhwa.id}`]}>
+                            Edit this manhwa's details and metadata
+                          </Tooltip>
+                        </TooltipContainer>
+                        <TooltipContainer>
+                          <DeleteButton 
+                            onClick={() => handleDelete(manhwa)} 
+                            style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
+                            onMouseEnter={() => showTooltip(`delete-${manhwa.id}`)}
+                            onMouseLeave={() => hideTooltip(`delete-${manhwa.id}`)}
+                          >
+                            Delete
+                          </DeleteButton>
+                          <Tooltip $show={tooltips[`delete-${manhwa.id}`]}>
+                            Permanently delete this manhwa from the database
+                          </Tooltip>
+                        </TooltipContainer>
                       </div>
                     </Td>
                   </Tr>
@@ -1639,12 +1774,32 @@ const AdminPage: React.FC = () => {
                   <MobileFieldValue style={{ textTransform: 'capitalize' }}>{manhwa.status}</MobileFieldValue>
                 </MobileCardField>
                 <MobileActions>
-                  <Button onClick={() => handleEdit(manhwa)} style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}>
-                    Edit
-                  </Button>
-                  <DeleteButton onClick={() => handleDelete(manhwa)} style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}>
-                    Delete
-                  </DeleteButton>
+                  <TooltipContainer>
+                    <Button 
+                      onClick={() => handleEdit(manhwa)} 
+                      style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
+                      onMouseEnter={() => showTooltip(`mobile-edit-${manhwa.id}`)}
+                      onMouseLeave={() => hideTooltip(`mobile-edit-${manhwa.id}`)}
+                    >
+                      Edit
+                    </Button>
+                    <Tooltip $show={tooltips[`mobile-edit-${manhwa.id}`]}>
+                      Edit this manhwa's details
+                    </Tooltip>
+                  </TooltipContainer>
+                  <TooltipContainer>
+                    <DeleteButton 
+                      onClick={() => handleDelete(manhwa)} 
+                      style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
+                      onMouseEnter={() => showTooltip(`mobile-delete-${manhwa.id}`)}
+                      onMouseLeave={() => hideTooltip(`mobile-delete-${manhwa.id}`)}
+                    >
+                      Delete
+                    </DeleteButton>
+                    <Tooltip $show={tooltips[`mobile-delete-${manhwa.id}`]}>
+                      Delete this manhwa
+                    </Tooltip>
+                  </TooltipContainer>
                 </MobileActions>
               </MobileCard>
             ))}
