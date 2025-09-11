@@ -92,4 +92,6 @@ dmypy.json
 /lora-training/
 /training-data/
 /sd-service/training-data/
-train_*.sh
+train_*.sh__pycache__/
+*.pyc
+*.pyo
