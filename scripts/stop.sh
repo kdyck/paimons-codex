@@ -55,20 +55,26 @@ for arg in "$@"; do
     esac
 done
 
+# Use docker compose or docker-compose based on availability
+COMPOSE_CMD="docker compose"
+if ! docker compose version &> /dev/null 2>&1; then
+    COMPOSE_CMD="docker-compose"
+fi
+
 # Stop services
 if [ -z "$TARGET_SERVICES" ]; then
     echo "🛑 Stopping ALL Paimon's Codex services..."
     
     if [ "$REMOVE_VOLUMES" = true ]; then
         echo "⚠️  WARNING: This will remove all data!"
-        podman-compose down --volumes
+        $COMPOSE_CMD down --volumes
     elif [ "$REMOVE_CONTAINERS" = true ]; then
         echo "🗑️  Stopping and removing all containers..."
-        podman-compose down
+        $COMPOSE_CMD down
         # Remove all project containers
-        podman rm -f paimons-api paimons-ui paimons-oracle paimons-caddy paimons-minio paimons-ollama paimons-sd 2>/dev/null || true
+        docker rm -f paimons-api paimons-ui paimons-oracle paimons-caddy paimons-minio paimons-ollama paimons-sd 2>/dev/null || true
     else
-        podman-compose down
+        $COMPOSE_CMD down
     fi
     
     echo "✅ All services stopped."
@@ -77,7 +83,7 @@ else
     
     # Stop specified services with main compose
     if [ -n "$TARGET_SERVICES" ]; then
-        podman-compose stop $TARGET_SERVICES
+        $COMPOSE_CMD stop $TARGET_SERVICES
     fi
     
     if [ "$REMOVE_CONTAINERS" = true ]; then
@@ -89,7 +95,7 @@ else
             elif [ "$service" = "stable-diffusion" ]; then
                 container_name="paimons-sd"
             fi
-            podman rm -f $container_name 2>/dev/null || echo "Container $container_name not found or already removed"
+            docker rm -f $container_name 2>/dev/null || echo "Container $container_name not found or already removed"
         done
     fi
     

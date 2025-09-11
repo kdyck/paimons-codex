@@ -4,8 +4,14 @@
 
 echo "🛑 Stopping Paimon's Codex development services..."
 
+# Use docker compose or docker-compose based on availability
+COMPOSE_CMD="docker compose"
+if ! docker compose version &> /dev/null 2>&1; then
+    COMPOSE_CMD="docker-compose"
+fi
+
 # Stop all services using dev compose file
-podman-compose -f docker-compose.dev.yml down
+$COMPOSE_CMD -f docker-compose.dev.yml down
 
 echo "✅ All development services stopped."
 echo ""

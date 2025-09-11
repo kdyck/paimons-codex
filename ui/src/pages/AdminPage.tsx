@@ -1483,9 +1483,31 @@ const AdminPage: React.FC = () => {
                   src={`data:image/png;base64,${generatedResult.character_art.image_base64}`} 
                   alt="Generated character art" 
                 />
-                <p style={{ fontSize: '0.8rem', opacity: 0.7, margin: '0.5rem 0 0 0' }}>
-                  Prompt: {generatedResult.character_art.prompt}
-                </p>
+                <div style={{ fontSize: '0.8rem', opacity: 0.7, margin: '0.5rem 0 0 0' }}>
+                  <p style={{ margin: '0 0 0.25rem 0' }}>
+                    Prompt: {generatedResult.character_art.prompt}
+                  </p>
+                  {generatedResult.character_art.seed && (
+                    <p style={{ margin: '0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      Seed: {generatedResult.character_art.seed}
+                      <button 
+                        onClick={() => navigator.clipboard.writeText(generatedResult.character_art.seed.toString())}
+                        style={{ 
+                          background: 'none', 
+                          border: '1px solid rgba(255,255,255,0.3)', 
+                          borderRadius: '4px',
+                          padding: '2px 6px',
+                          fontSize: '0.7rem',
+                          cursor: 'pointer',
+                          color: 'inherit'
+                        }}
+                        title="Copy seed to clipboard"
+                      >
+                        📋
+                      </button>
+                    </p>
+                  )}
+                </div>
               </div>
             )}
 

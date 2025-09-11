@@ -13,7 +13,7 @@ class ManhwaPromptBuilder:
     
     STYLE_PROMPTS = {
         "anime": "anime style, manga art, cel-shaded, clean lines, vibrant colors, MeinaMix style, high quality anime",
-        "realistic": "realistic, photorealistic, high detail, soft lighting, cinematic lighting, perfect face, symmetrical face, delicate features, natural skin texture, volumetric lighting, natural eyes, realistic eyes", 
+        "realistic": "realistic, photorealistic, professional photography, high detail, soft lighting, cinematic lighting, perfect face, symmetrical face, delicate features, natural skin texture, volumetric lighting, natural eyes, realistic eyes, ultra detailed, 8k uhd, dslr, film grain, professional portrait", 
         "chibi": "chibi style, super deformed, tiny body, big head, large sparkling eyes, rounded features, cute anime style, pastel color palette, soft lines, clean shading, kawaii, short, round, small body proportions, stubby limbs, adorable, wholesome, MeinaMix style",
         "watercolor": "watercolor painting, soft brushstrokes, artistic, painted texture, traditional art style",
         "oil painting": "oil painting style, thick brushstrokes, classical art, painted texture, fine art, museum quality",
@@ -50,7 +50,12 @@ class ManhwaPromptBuilder:
             Tuple of (positive_prompt, negative_prompt)
         """
         style_prompt = cls.STYLE_PROMPTS.get(style, cls.STYLE_PROMPTS['anime'])
-        positive = f"{prompt}, {style_prompt}, {cls.MANHWA_STYLE}"
+        
+        # For realistic covers, don't add manhwa style terms
+        if style == "realistic" and "book cover art" in prompt:
+            positive = f"{prompt}, {style_prompt}"
+        else:
+            positive = f"{prompt}, {style_prompt}, {cls.MANHWA_STYLE}"
         
         # Combine base negative with style-specific negatives
         style_negative = cls.STYLE_NEGATIVE.get(style, "")
@@ -86,14 +91,27 @@ class ManhwaPromptBuilder:
     @classmethod
     def build_cover_prompts(cls, title: str, genre: str, main_character: str, style: str = "anime") -> Tuple[str, str]:
         """Build prompts specifically for cover art generation."""
-        cover_prompt = (
-            f"manhwa cover art, {title}, {genre} theme, featuring {main_character}, "
-            f"dramatic composition, title design, professional book cover, no lettering, no text"
-        )
+        # Use different cover prompts based on style
+        if style == "realistic":
+            cover_prompt = (
+                f"book cover art, {genre} novel cover, featuring {main_character}, "
+                f"dramatic composition, cinematic poster, professional photography style, no lettering, no text"
+            )
+        else:
+            cover_prompt = (
+                f"manhwa cover art, {title}, {genre} theme, featuring {main_character}, "
+                f"dramatic composition, title design, professional book cover, no lettering, no text"
+            )
+        
         positive, negative = cls.build_prompts(cover_prompt, style)
         
         # Strongly suppress accidental text for covers
         enhanced_negative = negative + ", letters, words, text, watermark"
+        
+        # For realistic covers, add extra negatives to avoid anime style
+        if style == "realistic":
+            enhanced_negative += ", manhwa style, webtoon style, anime style, manga style, cartoon style"
+        
         return positive, enhanced_negative
     
     @classmethod

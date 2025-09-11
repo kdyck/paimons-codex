@@ -64,16 +64,15 @@ paimons-codex/
 
 ### Prerequisites
 
-- **OS**: Windows 11 with WSL2 (recommended) or Linux
+- **OS**: Windows 11, macOS, or Linux (cross-platform Docker support)
 - **GPU**: NVIDIA RTX 3090/4090 or similar (24GB VRAM ideal for high-resolution generation)
 - **RAM**: 16GB minimum, 32GB recommended
 - **Storage**: NVMe SSD with at least 50GB free space
-- **Software**: Podman/Docker with GPU passthrough support
+- **Software**: Docker Desktop or Docker Engine with GPU support
 
-**Install podman-compose:**
-```bash
-pip install podman-compose
-```
+**Install Docker:**
+- **Windows/macOS**: Download Docker Desktop from https://docker.com
+- **Linux**: Install Docker Engine via package manager
 
 ### 1. Clone the Repository
 
@@ -89,12 +88,12 @@ cp .env.example .env
 # Edit .env file with your configuration
 ```
 
-### 3. GPU Setup (Optional - WSL2 with NVIDIA GPU)
+### 3. GPU Setup (Optional - NVIDIA GPU)
 
 If you have an NVIDIA GPU and want to enable GPU acceleration for AI models:
 
 ```bash
-# Setup GPU support (one-time setup)
+# Setup GPU support (cross-platform, one-time setup)
 ./scripts/setup-gpu.sh
 ```
 
@@ -164,7 +163,7 @@ Tested on **Intel i9-12900KF + RTX 3090 + 32GB RAM**:
 
 ## 🛠️ Services Overview
 
-**7 Containerized Services:**
+**7 Containerized Services (Docker):**
 - **FastAPI Backend**: REST API with async processing and service orchestration
 - **React Frontend**: Modern TypeScript SPA with glassmorphism design
 - **Caddy Proxy**: HTTPS termination, load balancing, and security headers
@@ -177,19 +176,43 @@ Tested on **Intel i9-12900KF + RTX 3090 + 32GB RAM**:
 
 ## 🔧 Development
 
+### Using the Scripts (Recommended)
+Always use the provided scripts for consistent service management:
+
+```bash
+# Start all services
+./scripts/start.sh
+
+# Start specific services
+./scripts/start.sh api ui ollama
+
+# Stop all services
+./scripts/stop.sh
+
+# Stop specific services
+./scripts/stop.sh api ui
+
+# Clean reset (removes containers and some volumes)
+./scripts/clean.sh
+
+# Check available options
+./scripts/start.sh --help
+./scripts/stop.sh --help
+```
+
 ### Local Development
 All services support hot-reload for rapid development:
 
 ```bash
 # API changes auto-reload via uvicorn --reload
 # UI changes use React Hot Module Replacement  
-# Service logs: podman-compose logs -f <service_name>
+# Service logs: Check logs via start script output or docker compose logs -f <service_name>
 ```
 
 ### Database Access
 ```bash
 # Connect to Oracle container
-podman exec -it paimons-oracle sqlplus paimons_user/password123@//localhost:1521/FREEPDB1
+docker exec -it paimons-oracle sqlplus paimons_user/password123@//localhost:1521/FREEPDB1
 
 # Vector search examples available in ARCHITECTURE.md
 ```
@@ -265,7 +288,8 @@ The platform provides 30+ REST endpoints across 5 main categories:
 
 ### Clean Reset
 ```bash
-./scripts/clean.sh    # Remove all data and reset environment
+./scripts/clean.sh    # Remove containers and selective volumes (preserves models)
+./scripts/clean.sh -y # Auto-confirm the cleanup (non-interactive)
 ```
 
 ## 🤝 Contributing
@@ -283,8 +307,8 @@ This project is licensed under the MIT License.
 ## 🆘 Support
 
 For issues and questions:
-1. Check the logs: `podman-compose logs <service-name>`
-2. Verify service health: `podman-compose ps`
+1. Check the logs: Use `./scripts/start.sh` for startup logs or `docker compose logs <service-name>`
+2. Verify service health: `docker compose ps`
 3. Review configuration files
 4. Open an issue with detailed information
 
@@ -300,7 +324,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Stability AI** for Stable Diffusion models
 - **Meta AI** for Llama language models
 - **FastAPI** and **React** communities for excellent frameworks
-- **Podman/Docker** for containerization technology
+- **Docker** for containerization technology
 
 ---
 

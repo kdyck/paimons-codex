@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Oracle Database 23ai
   oracle-db:
@@ -28,9 +26,12 @@ services:
       dockerfile: Dockerfile
     container_name: paimons-api
     depends_on:
-      minio: {}
-      ollama: {}
-      stable-diffusion: {}
+      minio:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+      stable-diffusion:
+        condition: service_started
     environment:
       - ORACLE_USER=paimons_user
       - ORACLE_PASSWORD=password123
@@ -38,12 +39,12 @@ services:
       - PYTHONPATH=/app
       - ORACLE_SKIP=false
       - ORACLE_LIB_DIR=/opt/oracle/instantclient_21_13
-      - MINIO_ENDPOINT=10.89.0.3:9000
+      - MINIO_ENDPOINT=minio:9000
       - MINIO_ACCESS_KEY=paimons
       - MINIO_SECRET_KEY=paimons123
       - MINIO_BUCKET_NAME=codex
-      - OLLAMA_BASE_URL=http://10.89.0.4:11434
-      - SD_API_URL=http://10.89.0.5:7860
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - SD_API_URL=http://stable-diffusion:7860
     ports:
       - "127.0.0.1:8000:8000"
     volumes:
@@ -104,9 +105,10 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
   # Ollama LLM Server  
   ollama:
@@ -120,9 +122,14 @@ services:
     ports:
       - "127.0.0.1:11434:11434"
     volumes:
-      - ollama_models:/root/.ollama
-    devices:
-      - nvidia.com/gpu=all
+      - /mnt/f/ollama-models:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
     restart: unless-stopped
 
   # Stable Diffusion Service  
@@ -151,15 +158,20 @@ services:
     ports:
       - "127.0.0.1:7860:7860"
     volumes:
-      # Map to NVMe SSD drives D: and E: via Windows paths
-      - /mnt/d/sd-models:/nvme-models
-      - /mnt/d/sd-outputs:/nvme-outputs  
-      - /mnt/d/sd-temp:/nvme-temp
+      # Map to NVMe SSD directories set up by setup-nvme-ssd.sh
+      - /mnt/f/sd-models:/nvme-models
+      - /mnt/f/sd-outputs:/nvme-outputs  
+      - /mnt/f/sd-temp:/nvme-temp
       - ./lora-training:/lora-training
       - ./training-data:/training-data
       - ./sd-service:/app
-    devices:
-      - nvidia.com/gpu=all
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
     # Increase shared memory for large batch processing  
     shm_size: 8gb
     # Memory limits for your 128GB setup
@@ -172,5 +184,3 @@ volumes:
   caddy_data:
   caddy_config:
   minio_data:
-  ollama_models:
-  # sd_models: # Removed - now using direct NVMe SSD mapping

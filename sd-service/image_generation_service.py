@@ -184,6 +184,33 @@ class ImageGenerationService:
         buf = io.BytesIO()
         img.save(buf, format='PNG', optimize=True)
         return base64.b64encode(buf.getvalue()).decode()
+    
+    def _save_and_get_url(self, image: Image.Image, prefix: str = "generated", seed: Optional[int] = None) -> Tuple[str, str]:
+        """Save image to disk and return both URL and base64 for backwards compatibility"""
+        try:
+            import time
+            import uuid
+            
+            # Generate unique filename
+            timestamp = int(time.time())
+            unique_id = str(uuid.uuid4())[:8]
+            seed_part = f"_seed_{seed}" if seed else ""
+            filename = f"{prefix}_{timestamp}_{unique_id}{seed_part}.png"
+            
+            # Save to disk
+            filepath = self.save_image_to_ssd(image, filename)
+            
+            # Generate URL (relative to the static mount)
+            image_url = f"/images/{filename}" if filepath else ""
+            
+            # Always generate base64 for backwards compatibility
+            base64_data = self._image_to_b64(image)
+            
+            return image_url, base64_data
+        except Exception as e:
+            logger.warning(f"Failed to save image to disk: {e}")
+            # Fallback to just base64
+            return "", self._image_to_b64(image)
 
     def _generator(self, seed: Optional[int]):
         if not STABLE_DIFFUSION_AVAILABLE:
@@ -336,12 +363,12 @@ class ImageGenerationService:
         
         dtype = torch.float16 if (self.device == "cuda") else torch.float32
         
-        # Load proper VAE to fix purple blotches in Anything v4.0
+        # Load proper VAE to fix purple blotches and improve image quality
         vae = None
-        if "anything" in model_id.lower() or "xyn-ai" in model_id.lower():
+        if any(x in model_id.lower() for x in ["anything", "xyn-ai", "meinamix", "sinkinai"]):
             try:
                 from diffusers import AutoencoderKL
-                logger.info("🎨 Loading proper VAE to fix purple blotches...")
+                logger.info("🎨 Loading proper VAE for better image quality...")
                 
                 # Try multiple VAE options in order of preference
                 vae_options = [
@@ -912,8 +939,8 @@ class ImageGenerationService:
                 negative_prompt=neg,
                 width=base_w,
                 height=base_h,
-                num_inference_steps=30,
-                guidance_scale=8.0,
+                num_inference_steps=25,
+                guidance_scale=7.5,
                 generator=self._generator(seed),
             ).images[0]
         except RuntimeError as e:
@@ -929,8 +956,8 @@ class ImageGenerationService:
                     negative_prompt=neg,
                     width=base_w,
                     height=base_h,
-                    num_inference_steps=26,
-                    guidance_scale=7.6,
+                    num_inference_steps=22,
+                    guidance_scale=7.2,
                     generator=self._generator(seed),
                 ).images[0]
             else:
@@ -942,11 +969,11 @@ class ImageGenerationService:
                     img,
                     pos,
                     neg,
-                    denoise=0.34,
+                    denoise=0.35,
                     upscale=upscale,
                     seed=seed,
                     steps=18,
-                    guidance_scale=7.8,
+                    guidance_scale=7.5,
                 )
             except RuntimeError as e:
                 if "CUDA out of memory" in str(e):
@@ -1090,11 +1117,11 @@ class ImageGenerationService:
                     img,
                     pos,
                     neg,
-                    denoise=0.34,
+                    denoise=0.35,
                     upscale=upscale,
                     seed=seed,
                     steps=18,
-                    guidance_scale=7.8,
+                    guidance_scale=7.5,
                 )
             except RuntimeError as e:
                 if "CUDA out of memory" in str(e):

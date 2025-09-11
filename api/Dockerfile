@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y \
     wget \
     unzip \
     gcc \
-    libaio1 \
+    libaio-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Oracle Instant Client
@@ -28,7 +28,7 @@ WORKDIR /app
 
 # Install minimal runtime dependencies
 RUN apt-get update && apt-get install -y \
-    libaio1 \
+    libaio-dev \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 

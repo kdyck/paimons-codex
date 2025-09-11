@@ -1,7 +1,5 @@
-# Podman-specific overrides
-# This file provides Podman-specific configurations
-
-version: '3.8'
+# Docker-specific overrides
+# This file provides Docker-specific configurations
 
 services:
   # Oracle Database with Podman-specific settings

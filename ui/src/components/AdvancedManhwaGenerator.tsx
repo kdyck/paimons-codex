@@ -1142,12 +1142,50 @@ const AdvancedManhwaGenerator: React.FC<AdvancedManhwaGeneratorProps> = ({ onGen
 
           <FormField>
             <Label>Seed (Optional)</Label>
-            <Input
-              type="number"
-              value={config.technical.seed || ''}
-              onChange={(e) => updateConfig('technical', 'seed', e.target.value ? parseInt(e.target.value) : null)}
-              placeholder="Leave empty for random"
-            />
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <Input
+                type="number"
+                value={config.technical.seed || ''}
+                onChange={(e) => updateConfig('technical', 'seed', e.target.value ? parseInt(e.target.value) : null)}
+                placeholder="Leave empty for random"
+                style={{ flex: 1 }}
+              />
+              <button
+                type="button"
+                onClick={() => updateConfig('technical', 'seed', Math.floor(Math.random() * 4294967295))}
+                style={{
+                  background: 'rgba(102, 126, 234, 0.2)',
+                  border: '1px solid rgba(102, 126, 234, 0.3)',
+                  borderRadius: '6px',
+                  padding: '0.5rem 0.75rem',
+                  fontSize: '0.8rem',
+                  cursor: 'pointer',
+                  color: 'inherit',
+                  whiteSpace: 'nowrap'
+                }}
+                title="Generate random seed"
+              >
+                🎲 Random
+              </button>
+              {config.technical.seed && (
+                <button
+                  type="button"
+                  onClick={() => updateConfig('technical', 'seed', null)}
+                  style={{
+                    background: 'rgba(220, 53, 69, 0.2)',
+                    border: '1px solid rgba(220, 53, 69, 0.3)',
+                    borderRadius: '6px',
+                    padding: '0.5rem 0.75rem',
+                    fontSize: '0.8rem',
+                    cursor: 'pointer',
+                    color: 'inherit'
+                  }}
+                  title="Clear seed"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
           </FormField>
 
           <FormField>

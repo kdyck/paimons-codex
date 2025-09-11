@@ -7,6 +7,8 @@ import asyncio
 import uvicorn
 import warnings
 from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from contextlib import asynccontextmanager
 
@@ -136,6 +138,11 @@ def create_default_config():
 
 # Initialize on startup
 setup_models_on_startup()
+
+# Mount static files for serving generated images
+output_dir = os.getenv("SD_OUTPUT_DIR", "/nvme-outputs")
+os.makedirs(output_dir, exist_ok=True)
+app.mount("/images", StaticFiles(directory=output_dir), name="images")
 
 # Pydantic models
 class CharacterRequest(BaseModel):
