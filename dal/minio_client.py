@@ -186,9 +186,18 @@ def get_minio_client() -> Optional[Minio]:
     if _minio_client is None:
         try:
             _minio_client = MinIOClient()
-            return _minio_client.client
         except Exception as e:
             print(f"Failed to initialize MinIO client: {e}")
+            return None
+    
+    # If not initialized, try to initialize now
+    if not _minio_client._initialized:
+        try:
+            _minio_client._ensure_bucket_exists()
+            _minio_client._initialized = True
+            print("MinIO client successfully initialized on retry")
+        except Exception as e:
+            print(f"MinIO connection error: {e}")
             return None
     
     return _minio_client.client if _minio_client._initialized else None

@@ -253,7 +253,16 @@ class ManhwaImportService:
     async def _store_cover_image(self, generated_data: Dict[str, Any], source_file: str) -> Optional[str]:
         """Store cover image in MinIO and return URL"""
         try:
-            cover_art = generated_data.get("cover_art", {})
+            # Check for cover_art in different locations based on file structure
+            cover_art = None
+            
+            if "complete_data" in generated_data:
+                # Complete manhwa file structure
+                cover_art = generated_data.get("complete_data", {}).get("cover_art", {})
+            elif "cover_art" in generated_data:
+                # Direct cover_art in generated_data
+                cover_art = generated_data.get("cover_art", {})
+            
             if not cover_art or "image_base64" not in cover_art:
                 return None
             
@@ -275,8 +284,9 @@ class ManhwaImportService:
                 content_type="image/png"
             )
             
-            # Return MinIO URL
-            minio_endpoint = os.getenv("MINIO_ENDPOINT", "localhost:9000")
+            # Return MinIO URL accessible from frontend
+            # Use localhost for external access instead of internal docker network name
+            minio_endpoint = os.getenv("MINIO_EXTERNAL_ENDPOINT", "localhost:9000")
             return f"http://{minio_endpoint}/{self.bucket_name}/{cover_filename}"
             
         except Exception as e:
@@ -291,7 +301,12 @@ class ManhwaImportService:
                 return
             
             # Store character art if available
-            character_art = generated_data.get("character_art", {})
+            character_art = None
+            if "complete_data" in generated_data:
+                character_art = generated_data.get("complete_data", {}).get("character_art", {})
+            elif "character_art" in generated_data:
+                character_art = generated_data.get("character_art", {})
+                
             if character_art and "image_base64" in character_art:
                 await self._store_character_art(manhwa_id, character_art)
             

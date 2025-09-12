@@ -54,7 +54,23 @@ class OracleClient:
                 columns = [desc[0].lower() for desc in cursor.description] if cursor.description else []
                 rows = cursor.fetchall()
                 
-                return [dict(zip(columns, row)) for row in rows]
+                # Handle CLOB objects by reading them immediately
+                results = []
+                for row in rows:
+                    result_dict = {}
+                    for i, value in enumerate(row):
+                        col_name = columns[i]
+                        # Handle CLOB objects by reading them immediately
+                        if hasattr(value, 'read'):
+                            try:
+                                result_dict[col_name] = value.read()
+                            except:
+                                result_dict[col_name] = str(value) if value else None
+                        else:
+                            result_dict[col_name] = value
+                    results.append(result_dict)
+                
+                return results
             finally:
                 cursor.close()
     
