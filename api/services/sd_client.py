@@ -11,7 +11,8 @@ class StableDiffusionClient:
     """Client for communicating with the separate Stable Diffusion service."""
     
     def __init__(self):
-        self.base_url = os.getenv('SD_API_URL', 'http://10.89.0.6:7860')
+        self.base_url = os.getenv('SD_API_URL', 'http://host.docker.internal:7860')
+        print(f"Using SD_API_URL from environment: {self.base_url}")
         self.client = httpx.AsyncClient(timeout=300.0)  # 5 minute timeout
         logger.info(f"SD Client initialized with URL: {self.base_url}")
     

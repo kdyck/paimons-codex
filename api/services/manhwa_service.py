@@ -21,7 +21,14 @@ class ManhwaService:
     
     async def get_all(self, skip: int = 0, limit: int = 20) -> List[Dict[str, Any]]:
         if self.oracle_client:
-            return await self.oracle_client.get_manhwa_list(skip=skip, limit=limit)
+            try:
+                return await self.oracle_client.get_manhwa_list(skip=skip, limit=limit)
+            except Exception as e:
+                print(f"Oracle query failed: {e}")
+                print("Falling back to sample data")
+                # Fallback: return sample data + memory storage for development
+                all_data = self._get_sample_data() + self._memory_storage
+                return all_data[skip:skip+limit]
         else:
             # Fallback: return sample data + memory storage for development
             all_data = self._get_sample_data() + self._memory_storage
