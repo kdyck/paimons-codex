@@ -95,3 +95,6 @@ dmypy.json
 train_*.sh__pycache__/
 *.pyc
 *.pyo
+
+
+.idea

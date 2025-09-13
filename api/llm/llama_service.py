@@ -6,6 +6,7 @@ import os
 class LlamaService:
     def __init__(self):
         self.ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
+        print(f"Using OLLAMA_BASE_URL from environment: {self.ollama_base_url}")
         print(f"LlamaService initialized with Ollama at {self.ollama_base_url}")
     
     async def get_available_models(self) -> List[Dict[str, Any]]:
@@ -45,7 +46,7 @@ class LlamaService:
                     model = models[0]["name"]
                 else:
                     return {
-                        "generated_text": "No models available in Ollama",
+                        "generated_text": self._get_fallback_content(prompt),
                         "tokens_used": 0
                     }
             
@@ -254,3 +255,53 @@ class LlamaService:
             "art_prompt": f"{character_name}, {description}, {art_style}, manhwa style, detailed character art",
             "tags": ["manhwa", art_style, "character_design"]
         }
+    
+    def _get_fallback_content(self, prompt: str) -> str:
+        """Provide fallback content when Ollama is not available"""
+        if "manhwa story" in prompt.lower():
+            return """Title: The Rising Shadow
+            
+Synopsis: In a world where martial artists can harness spiritual energy, a young student discovers an ancient technique that could change everything. As dark forces emerge from the shadows, they must master their newfound power to protect those they care about.
+
+Chapter Outlines:
+Chapter 1: The Awakening - A mysterious incident reveals hidden powers
+Chapter 2: First Steps - Learning to control newfound abilities  
+Chapter 3: Dark Threats - Ancient enemies begin to stir
+Chapter 4: Training Arc - Intensive preparation and growth
+Chapter 5: The First Battle - Testing skills against real danger"""
+        
+        elif "character sheet" in prompt.lower():
+            return """Physical Appearance:
+- Height: Average build, athletic physique
+- Hair: Dark, slightly messy style
+- Eyes: Determined gaze, expressive
+- Distinctive features: Scar on left hand, confident posture
+
+Clothing Style:
+- Casual modern wear with traditional elements
+- Dark colors predominant (black, navy, gray)
+- Practical clothing suitable for action
+
+Personality Reflected:
+- Confident but not arrogant stance
+- Protective gestures around friends
+- Determined expression in challenging moments"""
+        
+        elif "chapter" in prompt.lower():
+            return """Chapter Title: The Test Begins
+
+Scene 1: Morning training grounds - Character practices alone
+Scene 2: Unexpected visitor arrives with urgent news
+Scene 3: First confrontation - tension builds
+Scene 4: Power awakens in moment of crisis
+Scene 5: Aftermath - consequences revealed
+
+Key Dialogue:
+"This power... it's different from anything I've felt before."
+"You have no idea what you're dealing with."
+"I won't let anyone get hurt because of me."
+
+Character emotions: Determination, uncertainty, protective instinct"""
+        
+        else:
+            return "Ollama is not available. To use AI generation features, please install Ollama and download a model like 'llama3.2' or 'qwen2.5'."

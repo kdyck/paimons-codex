@@ -14,6 +14,7 @@ class ManhwaResponse(BaseModel):
     status: str
     description: str
     cover_image: Optional[str] = None
+    slug: str
 
 @router.get("/", response_model=List[ManhwaResponse])
 async def get_all_manhwa(skip: int = 0, limit: int = 20):

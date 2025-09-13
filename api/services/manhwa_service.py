@@ -151,7 +151,8 @@ class ManhwaService:
                 "genre": ["Action", "Fantasy", "Adventure"],
                 "status": "completed",
                 "description": "10 years ago, after the Gate that connected the real world with the monster world opened, some of the ordinary, everyday people received the power to hunt monsters within the Gate.",
-                "cover_image": "https://example.com/solo-leveling-cover.jpg"
+                "cover_image": "https://example.com/solo-leveling-cover.jpg",
+                "slug": "solo-leveling"
             },
             {
                 "id": "tower-of-god",
@@ -160,7 +161,8 @@ class ManhwaService:
                 "genre": ["Action", "Drama", "Fantasy", "Mystery"],
                 "status": "ongoing",
                 "description": "Bam, who was alone all his life has entered the tower to chase after his only friend, available to fulfill his promise.",
-                "cover_image": "https://example.com/tower-of-god-cover.jpg"
+                "cover_image": "https://example.com/tower-of-god-cover.jpg",
+                "slug": "tower-of-god"
             },
             {
                 "id": "the-god-of-high-school",
@@ -169,6 +171,7 @@ class ManhwaService:
                 "genre": ["Action", "Comedy", "Supernatural", "Martial Arts"],
                 "status": "completed",
                 "description": "While an island half-disappearing from the face of the earth, a mysterious organization is sending out invitations for a tournament to every skilled fighter in the world.",
-                "cover_image": "https://example.com/god-of-high-school-cover.jpg"
+                "cover_image": "https://example.com/god-of-high-school-cover.jpg",
+                "slug": "the-god-of-high-school"
             }
         ]
